@@ -88,7 +88,7 @@ export_crawl() {
 run_new_crawl() {
   read -rp "Enter URL: " URL
 
-  SITE=$(
+  BASE_SITE=$(
     echo "$URL" |
     sed -E 's#https?://##' |
     sed 's#/$##' |
@@ -96,7 +96,7 @@ run_new_crawl() {
   )
 
   get_crawl_type "$URL"
-  SITE="${SITE}-${CRAWL_TYPE}"
+  SITE="${BASE_SITE}-${CRAWL_TYPE}"
 
   echo
   echo "Crawling: $URL"
@@ -182,7 +182,7 @@ run_report() {
   CSV="$OUTDIR/internal_html.csv"
   echo
   echo "Generating report..."
-  python3 "$(dirname "$0")/sf-report.py" "$CSV" "$CRAWL_TYPE" "$SITE"
+  python3 "$(dirname "$0")/sf-report.py" "$CSV" "$CRAWL_TYPE" "$BASE_SITE"
 }
 
 send_gchat() {
