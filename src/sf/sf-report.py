@@ -281,6 +281,13 @@ matching_metrics.sort(key=lambda p: p.stat().st_mtime)
 
 previous_metrics = matching_metrics[-1] if matching_metrics else None
 
+previous_data = {}
+
 if previous_metrics:
+    with open(previous_metrics) as f:
+        previous_data = json.load(f)
+
     out()
     out(f"Previous metrics: {previous_metrics}")
+
+out(f"Previous Total: {previous_data.get('total', 'N/A')}")
