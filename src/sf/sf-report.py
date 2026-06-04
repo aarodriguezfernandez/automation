@@ -18,6 +18,23 @@ report_date = datetime.now().strftime("%Y-%m-%d")
 
 report = StringIO()
 
+
+def delta(name, current, previous_data):
+    previous = previous_data.get(name)
+
+    if previous is None:
+        return str(current)
+
+    diff = current - previous
+
+    if diff > 0:
+        return f"{current} (+{diff})"
+
+    if diff < 0:
+        return f"{current} ({diff})"
+
+    return f"{current} (0)"
+
 def out(text=""):
     print(text)
     report.write(text + "\n")
@@ -31,6 +48,7 @@ missing_h1 = 0
 multiple_h1 = 0
 
 empty_sections = 0
+empty_section_urls = []
 
 internal_301 = 0
 internal_404 = 0
@@ -96,20 +114,90 @@ with open(csv_file, newline="", encoding="utf-8-sig") as f:
         try:
             if int(row["Empty Sections"] or 0) > 0:
                 empty_sections += 1
+                empty_section_urls.append(row["Address"])
         except ValueError:
             pass
+
+# Metric and report generation folder
+folder_name = os.path.basename(os.path.dirname(csv_file))
+
+metrics = {
+    "site": site,
+    "crawl_type": crawl_type,
+    "total": total,
+    "indexable": indexable,
+    "non_indexable": non_indexable,
+    "internal_301": internal_301,
+    "internal_404": internal_404,
+    "missing_meta": missing_meta,
+    "missing_h1": missing_h1,
+    "multiple_h1": multiple_h1,
+    "empty_sections": empty_sections,
+    "empty_section_urls": sorted(empty_section_urls),
+    "external_404": external_404,
+    "external_404_urls": sorted([
+        row["url"] for row in external_404_urls
+    ]),
+   
+}
+
+json_file = os.path.join(
+    os.path.dirname(csv_file),
+    f"{folder_name}-metrics.json"
+)
+
+with open(json_file, "w") as f:
+    json.dump(metrics, f, indent=2)
+
+current_dir = Path(os.path.dirname(csv_file))
+exports_dir = current_dir.parent
+
+
+current_metrics = Path(json_file)
+current_dir = Path(os.path.dirname(csv_file))
+exports_dir = current_dir.parent
+
+matching_metrics = []
+
+for p in exports_dir.glob("*/*-metrics.json"):
+    if p == current_metrics:
+        continue
+
+    try:
+        with open(p) as f:
+            data = json.load(f)
+
+        if data.get("site") == site and data.get("crawl_type") == crawl_type:
+            matching_metrics.append(p)
+
+    except Exception:
+        pass
+
+matching_metrics.sort(key=lambda p: p.stat().st_mtime)
+
+previous_metrics = matching_metrics[-1] if matching_metrics else None
+
+previous_data = {}
+
+if previous_metrics:
+    with open(previous_metrics) as f:
+        previous_data = json.load(f)
+
+    out()
+    out(f"Previous metrics: {previous_metrics}")
+
 
 out()
 out(f"https://{site} - {report_date}")
 out("=" * 35)
-out(f"Total Addresses: {total}")
-out(f"Indexable: {indexable}")
-out(f"Non-Indexable: {non_indexable}")
-out(f"Internal 301s: {internal_301}")
+out(f"Total Addresses: {delta('total', total, previous_data)}")
+out(f"Indexable: {delta('indexable', indexable, previous_data)}")
+out(f"Non-Indexable: {delta('non_indexable', non_indexable, previous_data)}")
+out(f"Internal 301s: {delta('internal_301', internal_301, previous_data)}")
 if internal_404 == 0:
     out("No internal 404s")
 else:
-    out(f"Internal 404s: {internal_404}")
+    out(f"Internal 404s: {delta('internal_404', internal_404, previous_data)}")
 if internal_404_urls:
     out()
     out("Internal 404 URLs")
@@ -123,9 +211,9 @@ if internal_404_urls:
         for source in sorted(set(internal_404_sources.get(url, []))):
             out(f"    linked from: {source}")
 
-out(f"Missing Meta Description: {missing_meta}")
-out(f"Missing H1: {missing_h1}")
-out(f"Multiple H1: {multiple_h1}")
+out(f"Missing Meta Description: {delta('missing_meta', missing_meta, previous_data)}")
+out(f"Missing H1: {delta('missing_h1', missing_h1, previous_data)}")
+out(f"Multiple H1: {delta('multiple_h1', multiple_h1, previous_data)}")
 
 import os
 
@@ -186,11 +274,11 @@ if os.path.exists(external_404_file):
                 "inlinks": row["Inlinks"]
             })
 
-out(f"Empty Sections: {empty_sections}")
+out(f"Empty Sections: {delta('empty_sections', empty_sections, previous_data)}")
 if external_404 == 0:
     out("No external 404s")
 else:
-    out(f"External 404s: {external_404}")
+    out(f"External 404s: {delta('external_404', external_404, previous_data)}")
 if external_404_urls:
     out()
     out("External 404 URLs")
@@ -218,8 +306,6 @@ if external_404_urls:
                 out(f"    linked from: {source}")
 
 
-folder_name = os.path.basename(os.path.dirname(csv_file))
-
 report_file = os.path.join(
     os.path.dirname(csv_file),
     f"{folder_name}-report.txt"
@@ -231,63 +317,4 @@ with open(report_file, "w", encoding="utf-8") as f:
 out()
 out(f"Report saved: {report_file}")
 
-metrics = {
-    "site": site,
-    "crawl_type": crawl_type,
-    "total": total,
-    "indexable": indexable,
-    "non_indexable": non_indexable,
-    "internal_301": internal_301,
-    "internal_404": internal_404,
-    "missing_meta": missing_meta,
-    "missing_h1": missing_h1,
-    "multiple_h1": multiple_h1,
-    "empty_sections": empty_sections,
-    "external_404": external_404,
-}
 
-json_file = os.path.join(
-    os.path.dirname(csv_file),
-    f"{folder_name}-metrics.json"
-)
-
-with open(json_file, "w") as f:
-    json.dump(metrics, f, indent=2)
-
-current_dir = Path(os.path.dirname(csv_file))
-exports_dir = current_dir.parent
-
-current_metrics = Path(json_file)
-current_dir = Path(os.path.dirname(csv_file))
-exports_dir = current_dir.parent
-
-matching_metrics = []
-
-for p in exports_dir.glob("*/*-metrics.json"):
-    if p == current_metrics:
-        continue
-
-    try:
-        with open(p) as f:
-            data = json.load(f)
-
-        if data.get("site") == site and data.get("crawl_type") == crawl_type:
-            matching_metrics.append(p)
-
-    except Exception:
-        pass
-
-matching_metrics.sort(key=lambda p: p.stat().st_mtime)
-
-previous_metrics = matching_metrics[-1] if matching_metrics else None
-
-previous_data = {}
-
-if previous_metrics:
-    with open(previous_metrics) as f:
-        previous_data = json.load(f)
-
-    out()
-    out(f"Previous metrics: {previous_metrics}")
-
-out(f"Previous Total: {previous_data.get('total', 'N/A')}")
