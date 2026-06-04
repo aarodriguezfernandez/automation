@@ -9,12 +9,10 @@ from pathlib import Path
 
 csv_file = sys.argv[1]
 crawl_type = sys.argv[2]
+site = sys.argv[3]
 
 from datetime import datetime
 
-folder_name = os.path.basename(os.path.dirname(csv_file))
-
-site = "-".join(folder_name.split("-")[:-2]).replace("-", ".")
 # report_date = datetime.now().strftime("%Y-%m-%d %H:%M")
 report_date = datetime.now().strftime("%Y-%m-%d")
 

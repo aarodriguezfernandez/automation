@@ -182,7 +182,7 @@ run_report() {
   CSV="$OUTDIR/internal_html.csv"
   echo
   echo "Generating report..."
-  python3 ./sf-report.py "$CSV" "$CRAWL_TYPE"
+  python3 ./sf-report.py "$CSV" "$CRAWL_TYPE" "$SITE"
 }
 
 send_gchat() {
