@@ -1,4 +1,7 @@
 reports/
 node_modules/
 sf-exports/
+local/
+tmp/
+.github/
 .env
