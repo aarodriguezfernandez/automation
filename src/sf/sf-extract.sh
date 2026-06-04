@@ -48,7 +48,7 @@ export_crawl() {
   echo "Exporting crawl..."
 
   TS=$(date +"%Y%m%d-%H%M%S")
-  OUTDIR="$(pwd)/sf-exports/${SITE}-${TS}"
+  OUTDIR="$(pwd)/src/sf/sf-exports/${SITE}-${TS}"
 
   mkdir -p "$OUTDIR"
 
@@ -182,7 +182,7 @@ run_report() {
   CSV="$OUTDIR/internal_html.csv"
   echo
   echo "Generating report..."
-  python3 ./sf-report.py "$CSV" "$CRAWL_TYPE" "$SITE"
+  python3 "$(dirname "$0")/sf-report.py" "$CSV" "$CRAWL_TYPE" "$SITE"
 }
 
 send_gchat() {
