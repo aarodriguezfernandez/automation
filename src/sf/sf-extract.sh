@@ -153,7 +153,7 @@ choose_crawl() {
 
   IFS='|' read -r CRAWL_ID CRAWL_URL CRAWL_URLS <<< "$SELECTED"
 
-  SITE=$(
+  BASE_SITE=$(
   echo "$CRAWL_URL" |
   sed -E 's#https?://##' |
   sed 's#/$##' |
@@ -161,7 +161,7 @@ choose_crawl() {
   )
 
   get_crawl_type "$CRAWL_URL"
-  SITE="${SITE}-${CRAWL_TYPE}"
+  SITE="${BASE_SITE}-${CRAWL_TYPE}"
 
   echo "CRAWL_ID=[$CRAWL_ID]"
   echo
