@@ -28,7 +28,24 @@ get_crawl_type() {
 
     case "$TYPE" in
       1) CRAWL_TYPE="live" ;;
-      2) CRAWL_TYPE="static" ;;
+      2)
+  CRAWL_TYPE="static"
+  echo
+  echo "==================================="
+  echo "STATIC CRAWL SELECTED"
+  echo "Update /etc/hosts before continuing."
+  echo
+  echo "Expected: production domain should point to the static AWS/S3 target."
+  echo "Do not continue until hosts is correct."
+  echo "==================================="
+  echo
+  read -rp "Have you updated /etc/hosts for STATIC? [y/N] " HOSTS_READY
+
+  if [[ ! "$HOSTS_READY" =~ ^[Yy]$ ]]; then
+    echo "Aborting static crawl."
+    exit 1
+  fi
+  ;;
       *) echo "Invalid option"; exit 1 ;;
     esac
   fi
@@ -125,7 +142,7 @@ run_new_crawl() {
 choose_crawl() {
   CRAWLS=()
 
-  while IFS='│' read -r id name url mode urls complete modified version _; do
+  while IFS='│' read -r id url urls _; do
     id=$(echo "$id" | tr -d '║' | xargs)
     url=$(echo "$url" | xargs)
     urls=$(echo "$urls" | xargs)
@@ -137,7 +154,7 @@ choose_crawl() {
 
   idx=0
   for crawl in "${CRAWLS[@]}"; do
-    IFS='|' read -r crawl_id crawl_url crawl_urls <<< "$crawl"
+    IFS='|' read -r crawl_url crawl_urls <<< "$crawl"
 
     printf "%2d) %-35s %6s URLs\n" \
       "$((idx+1))" \
@@ -221,6 +238,15 @@ elif [[ "$MODE" == "2" ]]; then
 else
   echo "Invalid option"
   exit 1
+fi
+
+if [[ "${CRAWL_TYPE:-}" == "static" ]]; then
+  echo
+  echo "==================================="
+  echo "STATIC CRAWL COMPLETE"
+  echo "If you are done with static crawls, restore /etc/hosts now."
+  echo "If running more static crawls, make sure /etc/hosts points to the correct site."
+  echo "==================================="
 fi
 
 echo
