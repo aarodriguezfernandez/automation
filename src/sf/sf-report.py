@@ -282,6 +282,14 @@ out(f"Missing H1: {delta('missing_h1', missing_h1, previous_data)}")
 out(f"Multiple H1: {delta('multiple_h1', multiple_h1, previous_data)}")
 
 out(f"Empty Sections: {delta('empty_sections', empty_sections, previous_data)}")
+if empty_section_urls:
+    out()
+    out("Empty Section URLs")
+    out("------------------")
+
+    for url in sorted(empty_section_urls):
+        out(f"- {url}")
+
 if external_404 == 0:
     out("No external 404s")
 else:
