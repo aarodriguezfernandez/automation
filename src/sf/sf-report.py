@@ -6,12 +6,12 @@ from io import StringIO
 import os
 import json
 from pathlib import Path
+from datetime import datetime
 
 csv_file = sys.argv[1]
 crawl_type = sys.argv[2]
 site = sys.argv[3]
 
-from datetime import datetime
 
 # report_date = datetime.now().strftime("%Y-%m-%d %H:%M")
 report_date = datetime.now().strftime("%Y-%m-%d")
@@ -203,6 +203,7 @@ previous_metrics = matching_metrics[-1] if matching_metrics else None
 
 previous_data = {}
 previous_external_404_urls = set()
+previous_internal_404_urls = set()
 
 # Output
 
@@ -214,6 +215,7 @@ metrics = {
     "non_indexable": non_indexable,
     "internal_301": internal_301,
     "internal_404": internal_404,
+    "internal_404_urls": sorted([row["url"] for row in internal_404_urls]),
     "missing_meta": missing_meta,
     "missing_h1": missing_h1,
     "multiple_h1": multiple_h1,
@@ -228,6 +230,7 @@ if previous_metrics:
         previous_data = json.load(f)
 
     previous_external_404_urls = set(previous_data.get("external_404_urls", []))
+    previous_internal_404_urls = set(previous_data.get("internal_404_urls", []))
 
 
 out()
@@ -242,17 +245,20 @@ if internal_404 == 0:
 else:
     out(f"Internal 404s: {delta('internal_404', internal_404, previous_data)}")
 if internal_404_urls:
-    out()
     out("Internal 404 URLs")
     out("-----------------")
 
     for row in internal_404_urls:
         url = row["url"]
 
-        out(f"- {url}")
+        if url in previous_internal_404_urls:
+            out(f"- 📊 {url}")
+        else:
+            out(f"- NEW {url}")
 
         for source in sorted(set(internal_404_sources.get(url, []))):
             out(f"    linked from: {source}")
+    out()
 
 out(f"Missing Meta Description: {delta('missing_meta', missing_meta, previous_data)}")
 out(f"Missing H1: {delta('missing_h1', missing_h1, previous_data)}")
@@ -272,7 +278,6 @@ if external_404 == 0:
 else:
     out(f"External 404s: {delta('external_404', external_404, previous_data)}")
 if external_404_urls:
-    out()
     out("External 404 URLs")
     out("-----------------")
 
@@ -299,6 +304,7 @@ if external_404_urls:
                 out(f"    linked from: {source} | anchor: {anchor}")
             else:
                 out(f"    linked from: {source}")
+    out()
 
 with open(json_file, "w") as f:
     json.dump(metrics, f, indent=2)
