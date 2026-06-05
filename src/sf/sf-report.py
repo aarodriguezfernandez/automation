@@ -240,10 +240,6 @@ metrics = {
    
 }
 
-with open(json_file, "w") as f:
-    json.dump(metrics, f, indent=2)
-
-
 if previous_metrics:
     with open(previous_metrics) as f:
         previous_data = json.load(f)
@@ -323,7 +319,8 @@ if external_404_urls:
             else:
                 out(f"    linked from: {source}")
 
-
+with open(json_file, "w") as f:
+    json.dump(metrics, f, indent=2)
 
 report_file = os.path.join(
     os.path.dirname(csv_file),
