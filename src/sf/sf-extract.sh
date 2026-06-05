@@ -142,7 +142,7 @@ run_new_crawl() {
 choose_crawl() {
   CRAWLS=()
 
-  while IFS='│' read -r id url urls _; do
+  while IFS='│' read -r id name url mode urls complete modified version _; do
     id=$(echo "$id" | tr -d '║' | xargs)
     url=$(echo "$url" | xargs)
     urls=$(echo "$urls" | xargs)
@@ -154,7 +154,7 @@ choose_crawl() {
 
   idx=0
   for crawl in "${CRAWLS[@]}"; do
-    IFS='|' read -r crawl_url crawl_urls <<< "$crawl"
+    IFS='|' read -r crawl_id crawl_url crawl_urls <<< "$crawl"
 
     printf "%2d) %-35s %6s URLs\n" \
       "$((idx+1))" \
