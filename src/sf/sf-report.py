@@ -35,9 +35,11 @@ def delta(name, current, previous_data):
 
     return f"{current} (0)"
 
+
 def out(text=""):
     print(text)
     report.write(text + "\n")
+
 
 total = 0
 indexable = 0
@@ -73,7 +75,6 @@ def base_filter(row):
 
 with open(csv_file, newline="", encoding="utf-8-sig") as f:
     for row in csv.DictReader(f):
-
         if not base_filter(row):
             continue
 
@@ -88,10 +89,12 @@ with open(csv_file, newline="", encoding="utf-8-sig") as f:
         if code.startswith("4"):
             internal_404 += 1
 
-            internal_404_urls.append({
-                "url": row["Address"],
-                "inlinks": row["Inlinks"],
-            })
+            internal_404_urls.append(
+                {
+                    "url": row["Address"],
+                    "inlinks": row["Inlinks"],
+                }
+            )
 
             continue
 
@@ -122,31 +125,25 @@ with open(csv_file, newline="", encoding="utf-8-sig") as f:
 folder_name = os.path.basename(os.path.dirname(csv_file))
 
 
-
 current_dir = Path(os.path.dirname(csv_file))
 exports_dir = current_dir.parent
 
-import os
 
 external_404_file = os.path.join(
-    os.path.dirname(csv_file),
-    "response_codes_external_client_error_(4xx).csv"
+    os.path.dirname(csv_file), "response_codes_external_client_error_(4xx).csv"
 )
 
 external_inlinks_file = os.path.join(
-    os.path.dirname(csv_file),
-    "external_client_error_(4xx)_inlinks.csv"
+    os.path.dirname(csv_file), "external_client_error_(4xx)_inlinks.csv"
 )
 
 internal_inlinks_file = os.path.join(
-    os.path.dirname(csv_file),
-    "internal_client_error_(4xx)_inlinks.csv"
+    os.path.dirname(csv_file), "internal_client_error_(4xx)_inlinks.csv"
 )
 
 if os.path.exists(internal_inlinks_file):
     with open(internal_inlinks_file, newline="", encoding="utf-8-sig") as f:
         for row in csv.DictReader(f):
-
             if row["Status Code"] != "404":
                 continue
 
@@ -158,7 +155,6 @@ if os.path.exists(internal_inlinks_file):
 if os.path.exists(external_inlinks_file):
     with open(external_inlinks_file, newline="", encoding="utf-8-sig") as f:
         for row in csv.DictReader(f):
-
             if row["Status Code"] != "404":
                 continue
 
@@ -166,31 +162,26 @@ if os.path.exists(external_inlinks_file):
             src = row["Source"]
             anchor = row.get("Anchor", "").strip()
 
-            external_404_sources.setdefault(dest, []).append({
-                "source": src,
-                "anchor": anchor,
-            })
+            external_404_sources.setdefault(dest, []).append(
+                {
+                    "source": src,
+                    "anchor": anchor,
+                }
+            )
 
 if os.path.exists(external_404_file):
     with open(external_404_file, newline="", encoding="utf-8-sig") as f:
         for row in csv.DictReader(f):
-
             if row["Status Code"] != "404":
                 continue
 
             external_404 += 1
 
-            external_404_urls.append({
-                "url": row["Address"],
-                "inlinks": row["Inlinks"]
-            })
+            external_404_urls.append({"url": row["Address"], "inlinks": row["Inlinks"]})
 
 # Comparison
 
-json_file = os.path.join(
-    os.path.dirname(csv_file),
-    f"{folder_name}-metrics.json"
-)
+json_file = os.path.join(os.path.dirname(csv_file), f"{folder_name}-metrics.json")
 current_metrics = Path(json_file)
 
 matching_metrics = []
@@ -213,11 +204,6 @@ previous_metrics = matching_metrics[-1] if matching_metrics else None
 previous_data = {}
 previous_external_404_urls = set()
 
-current_dir = Path(os.path.dirname(csv_file))
-exports_dir = current_dir.parent
-
-
-
 # Output
 
 metrics = {
@@ -234,19 +220,14 @@ metrics = {
     "empty_sections": empty_sections,
     "empty_section_urls": sorted(empty_section_urls),
     "external_404": external_404,
-    "external_404_urls": sorted([
-        row["url"] for row in external_404_urls
-    ]),
-   
+    "external_404_urls": sorted([row["url"] for row in external_404_urls]),
 }
 
 if previous_metrics:
     with open(previous_metrics) as f:
         previous_data = json.load(f)
 
-    previous_external_404_urls = set(
-        previous_data.get("external_404_urls", [])
-    )
+    previous_external_404_urls = set(previous_data.get("external_404_urls", []))
 
 
 out()
@@ -299,7 +280,7 @@ if external_404_urls:
         url = row["url"]
 
         if url in previous_external_404_urls:
-            out(f"- 📊 {url}")
+            out(f"- 📊 {url} - :spreadsheet: ")
         else:
             out(f"- NEW {url}")
 
@@ -322,15 +303,10 @@ if external_404_urls:
 with open(json_file, "w") as f:
     json.dump(metrics, f, indent=2)
 
-report_file = os.path.join(
-    os.path.dirname(csv_file),
-    f"{folder_name}-report.txt"
-)
+report_file = os.path.join(os.path.dirname(csv_file), f"{folder_name}-report.txt")
 
 with open(report_file, "w", encoding="utf-8") as f:
     f.write(report.getvalue())
 
 out()
 out(f"Report saved: {report_file}")
-
-
