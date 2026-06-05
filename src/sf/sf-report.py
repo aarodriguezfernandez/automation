@@ -7,6 +7,7 @@ import os
 import json
 from pathlib import Path
 from datetime import datetime
+import subprocess
 
 csv_file = sys.argv[1]
 crawl_type = sys.argv[2]
@@ -205,6 +206,21 @@ previous_data = {}
 previous_external_404_urls = set()
 previous_internal_404_urls = set()
 
+# Static site information
+static_info = {}
+
+if crawl_type == "static":
+    site_arg = "avigilon" if "avigilon" in site else "pelco"
+
+    result = subprocess.run(
+        ["./src/sf/get-static-info.sh", site_arg], capture_output=True, text=True
+    )
+
+    for line in result.stdout.splitlines():
+        if "=" in line:
+            k, v = line.split("=", 1)
+            static_info[k] = v
+
 # Output
 
 metrics = {
@@ -236,6 +252,14 @@ if previous_metrics:
 out()
 out(f"https://{site} - {report_date}")
 out("=" * 35)
+if static_info:
+    out("Static Site Information")
+    out("-----------------------")
+    out(f"Static HTML: {static_info.get('STATIC_HTML')}")
+    out(f"Live HTML: {static_info.get('LIVE_HTML')}")
+    out(f"HTML Diff: {static_info.get('HTML_DIFF')}")
+    out(f"Static Tag Matches Live: {static_info.get('TAG_MATCH')}")
+    out()
 out(f"Total Addresses: {delta('total', total, previous_data)}")
 out(f"Indexable: {delta('indexable', indexable, previous_data)}")
 out(f"Non-Indexable: {delta('non_indexable', non_indexable, previous_data)}")
@@ -285,7 +309,7 @@ if external_404_urls:
         url = row["url"]
 
         if url in previous_external_404_urls:
-            out(f"- 📊 {url} - :spreadsheet: ")
+            out(f"- 📊 {url}")
         else:
             out(f"- NEW {url}")
 
