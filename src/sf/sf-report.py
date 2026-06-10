@@ -43,11 +43,6 @@ def out(text=""):
     report.write(text + "\n")
 
 
-if crawl_id:
-    out(f"Crawl ID: {crawl_id}")
-out()
-
-
 total = 0
 indexable = 0
 non_indexable = 0
