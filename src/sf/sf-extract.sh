@@ -28,8 +28,13 @@ get_crawl_type() {
 
     case "$TYPE" in
       1) CRAWL_TYPE="live" ;;
-      2)
-  CRAWL_TYPE="static"
+      2)CRAWL_TYPE="static" ;;
+      *) echo "Invalid option"; exit 1 ;;
+    esac
+  fi
+}
+
+confirm_static_hosts() {
   echo
   echo "==================================="
   echo "STATIC CRAWL SELECTED"
@@ -39,15 +44,12 @@ get_crawl_type() {
   echo "Do not continue until hosts is correct."
   echo "==================================="
   echo
+
   read -rp "Have you updated /etc/hosts for STATIC? [y/N] " HOSTS_READY
 
   if [[ ! "$HOSTS_READY" =~ ^[Yy]$ ]]; then
     echo "Aborting static crawl."
     exit 1
-  fi
-  ;;
-      *) echo "Invalid option"; exit 1 ;;
-    esac
   fi
 }
 
@@ -114,6 +116,11 @@ run_new_crawl() {
   )
 
   get_crawl_type "$URL"
+
+  if [[ "$CRAWL_TYPE" == "static" ]]; then
+    confirm_static_hosts
+  fi
+
   SITE="${BASE_SITE}-${CRAWL_TYPE}"
 
   echo
@@ -242,7 +249,7 @@ else
   exit 1
 fi
 
-if [[ "${CRAWL_TYPE:-}" == "static" ]]; then
+if [[ "${CRAWL_TYPE:-}" == "static" ]] && [[ "${MODE:-}" == "2" ]]; then
   echo
   echo "==================================="
   echo "STATIC CRAWL COMPLETE"
