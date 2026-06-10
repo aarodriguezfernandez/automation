@@ -65,7 +65,8 @@ export_crawl() {
   echo "Exporting crawl..."
 
   TS=$(date +"%Y%m%d-%H%M%S")
-  OUTDIR="$(pwd)/src/sf/sf-exports/${SITE}-${TS}"
+  SHORT_ID=$(echo "$CRAWL_ID" | cut -c1-8)
+  OUTDIR="$(pwd)/src/sf/sf-exports/${SITE}-${SHORT_ID}-${TS}"
 
   mkdir -p "$OUTDIR"
 
@@ -156,10 +157,11 @@ choose_crawl() {
   for crawl in "${CRAWLS[@]}"; do
     IFS='|' read -r crawl_id crawl_url crawl_urls <<< "$crawl"
 
-    printf "%2d) %-35s %6s URLs\n" \
+    printf "%2d) %-35s %6s URLs (%s)\n" \
       "$((idx+1))" \
       "$crawl_url" \
-      "$crawl_urls"
+      "$crawl_urls" \
+      "$crawl_id"
 
     idx=$((idx+1))
   done
@@ -199,7 +201,7 @@ run_report() {
   CSV="$OUTDIR/internal_html.csv"
   echo
   echo "Generating report..."
-  python3 "$(dirname "$0")/sf-report.py" "$CSV" "$CRAWL_TYPE" "$BASE_SITE"
+  python3 "$(dirname "$0")/sf-report.py" "$CSV" "$CRAWL_TYPE" "$BASE_SITE" "$CRAWL_ID"
 }
 
 send_gchat() {

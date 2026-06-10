@@ -12,6 +12,7 @@ import subprocess
 csv_file = sys.argv[1]
 crawl_type = sys.argv[2]
 site = sys.argv[3]
+crawl_id = sys.argv[4] if len(sys.argv) > 4 else ""
 
 
 # report_date = datetime.now().strftime("%Y-%m-%d %H:%M")
@@ -40,6 +41,11 @@ def delta(name, current, previous_data):
 def out(text=""):
     print(text)
     report.write(text + "\n")
+
+
+if crawl_id:
+    out(f"Crawl ID: {crawl_id}")
+out()
 
 
 total = 0
@@ -248,9 +254,9 @@ if previous_metrics:
     previous_external_404_urls = set(previous_data.get("external_404_urls", []))
     previous_internal_404_urls = set(previous_data.get("internal_404_urls", []))
 
-
+label = "`S3`" if crawl_type == "static" else "`Live`"
 out()
-out(f"https://{site} - {report_date}")
+out(f"https://{site} - {report_date} {label}")
 out("=" * 35)
 if static_info:
     out("Static Site Information")
