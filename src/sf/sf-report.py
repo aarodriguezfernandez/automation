@@ -249,9 +249,11 @@ if previous_metrics:
     previous_external_404_urls = set(previous_data.get("external_404_urls", []))
     previous_internal_404_urls = set(previous_data.get("internal_404_urls", []))
 
+
+cleaned_site = site.replace("-", ".")
 label = "`S3`" if crawl_type == "static" else "`Live`"
 out()
-out(f"https://{site} - {report_date} {label}")
+out(f"https://{cleaned_site} - {report_date} {label}")
 out("=" * 35)
 if static_info:
     out("Static Site Information")

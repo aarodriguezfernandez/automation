@@ -20,6 +20,7 @@ extract_crawl_id() {
 get_crawl_type() {
   if [[ "$1" == *"preprod"* ]]; then
     CRAWL_TYPE="preprod"
+    clear_preprod_caches "$1"
   else
     echo
     echo "1) Live"
@@ -28,9 +29,33 @@ get_crawl_type() {
 
     case "$TYPE" in
       1) CRAWL_TYPE="live" ;;
-      2)CRAWL_TYPE="static" ;;
+      2) CRAWL_TYPE="static" ;;
       *) echo "Invalid option"; exit 1 ;;
     esac
+  fi
+}
+
+clear_preprod_caches() {
+  if [[ "$1" == *"pelco"* ]]; then
+    # Pelco preprod doesn't require cache clearing
+    return 0
+  fi
+  user=a5c5b759_1
+  server=f5f43580ac.nxcli.io
+  
+  echo "Clearing preprod caches..."
+  # Run the cache clearing commands, navigation resave and capture exit status
+  if ! ssh -T "$user@$server" '
+    preprod_release=$(readlink -f /home/a5c5b759/preprod.avigilon.com/html/../)
+    echo -e "Accessing $preprod_release for preprod..."
+    cd "$preprod_release" || exit 1
+    echo -e "Resaving main navigation..."
+    ./craft resave/entries --element-id=135609 --propagate-to=avigilonEn && 
+    echo -e "Clearing seomatic metabundle caches..."
+    ./craft clear-caches/seomatic-metabundle-caches
+  '; then
+    echo "Warning: Cache clear failed for preprod" >&2
+    # Continue anyway since this shouldn't block the crawl
   fi
 }
 
@@ -265,6 +290,41 @@ if [[ "$SEND_GCHAT" =~ ^[Yy]$ ]]; then
   send_gchat
 else
   echo "Skipping GChat"
+fi
+
+# Clean old export directories (keep 3 most recent per site+type)
+echo
+echo "Cleaning old export directories..."
+EXPORT_DIR="$(pwd)/src/sf/sf-exports"
+if [ -d "$EXPORT_DIR" ]; then
+  cd "$EXPORT_DIR" || exit 1
+
+  # Extract unique site+type patterns from directory names
+  # Handle both formats: site-type-SHORTID-TIMESTAMP and site-type-TIMESTAMP
+  PATTERNS=$(find . -mindepth 1 -maxdepth 1 -type d -name "*-*" | \
+    sed -E 's|^\./||' | \
+    sed -E 's/^(.*)-[a-f0-9]{8}-[0-9]{8}-[0-9]{6}$/\1/' | \
+    sed -E 's/^(.*)-[0-9]{8}-[0-9]{6}$/\1/' | \
+    sort -u)
+
+  # For each pattern, keep 3 most recent and delete the rest
+  echo "$PATTERNS" | while IFS= read -r pattern; do
+    if [ -n "$pattern" ]; then
+      # Find dirs matching this pattern, sort by modification time, keep 3 newest
+      TO_DELETE=$(find . -mindepth 1 -maxdepth 1 -type d -name "${pattern}-*" -print0 | \
+        xargs -0 ls -td 2>/dev/null | \
+        tail -n +4)
+
+      if [ -n "$TO_DELETE" ]; then
+        echo "$TO_DELETE" | while IFS= read -r dir; do
+          echo "  Removing: $dir"
+          rm -rf "$dir"
+        done
+      fi
+    fi
+  done
+
+  echo "Done. Kept 3 most recent per site+type."
 fi
 
 # Show tabs for reference
