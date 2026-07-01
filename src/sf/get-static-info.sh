@@ -1,22 +1,39 @@
 #!/bin/bash
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+AUTOMATION_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+
+# Load environment
+if [[ -f "$AUTOMATION_ROOT/.env" ]]; then
+  set -a
+  source "$AUTOMATION_ROOT/.env"
+  set +a
+fi
+
+# Load server configuration
+if [[ -f "$AUTOMATION_ROOT/.env.servers" ]]; then
+  set -a
+  source "$AUTOMATION_ROOT/.env.servers"
+  set +a
+fi
+
 SITE="${1:-}"
 
 case "$SITE" in
   avigilon)
-    USER=a5c5b759_1
-    SERVER=f5f43580ac.nxcli.io
-    S3_BUCKET=ci791087-vsa-s3-avigilon-static
-    BLITZ_PATH=www.avigilon.com
-    SITE_ROOT=/home/a5c5b759/avigilon.com/html
+    USER="$AVIGILON_USER"
+    SERVER="$AVIGILON_SERVER"
+    S3_BUCKET="$AVIGILON_S3_BUCKET"
+    BLITZ_PATH="$AVIGILON_BLITZ_PATH"
+    SITE_ROOT="$AVIGILON_SITE_ROOT"
     ;;
   pelco)
-    USER=ae288e2a_1
-    SERVER=4df4da2b36.nxcli.io
-    S3_BUCKET=ci791087-vsa-s3-pelco-static
-    BLITZ_PATH=www.pelco.com
-    SITE_ROOT=/home/ae288e2a/pelco.com/html
+    USER="$PELCO_USER"
+    SERVER="$PELCO_SERVER"
+    S3_BUCKET="$PELCO_S3_BUCKET"
+    BLITZ_PATH="$PELCO_BLITZ_PATH"
+    SITE_ROOT="$PELCO_SITE_ROOT"
     ;;
   *)
     echo "Usage: $0 avigilon|pelco"

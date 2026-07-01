@@ -14,10 +14,22 @@ if [[ -f "$AUTOMATION_ROOT/.env" ]]; then
   set +a
 fi
 
+# Load server configuration (if exists)
+if [[ -f "$AUTOMATION_ROOT/.env.servers" ]]; then
+  set -a
+  source "$AUTOMATION_ROOT/.env.servers"
+  set +a
+fi
+
 # Configuration
 QA_TOOL_DIR="${QA_TOOL_DIR:-$HOME/Data/b8bz8z5a/qa-tool}"
 QA_SERVER_URL="${QA_URL:-${QA_SERVER_URL:-http://localhost:8884}}"
 SF_SCRIPT="$AUTOMATION_ROOT/src/sf/sf-extract.sh"
+SF_EXPORTS_DIR="$AUTOMATION_ROOT/src/sf/sf-exports"
+
+# Nexcess sync configuration
+NEXCESS_SF_HOST="${NEXCESS_SF_HOST:-}"
+NEXCESS_SF_PATH="${NEXCESS_SF_PATH:-}"
 
 # Flags
 ENV=""
@@ -25,6 +37,7 @@ TEST_MODE=false
 SKIP_QA=false
 SKIP_SF=false
 USE_LOCAL=false
+SKIP_SYNC=false
 
 usage() {
   cat <<EOF
@@ -37,6 +50,7 @@ OPTIONS:
   --test            Test mode: skip actual QA and SF execution
   --skip-qa         Skip QA tests (SF only)
   --skip-sf         Skip Screaming Frog (QA only)
+  --skip-sync       Skip sf-exports sync with Nexcess (pull before, push after)
   --local           Use local QA server (localhost:8884) instead of remote
   -h, --help        Show this help
 
@@ -52,6 +66,16 @@ EXAMPLES:
 
   # SF only (skip QA)
   $0 --env preprod-avg --skip-qa
+
+  # Skip Nexcess sync (for testing without credentials)
+  $0 --env preprod-avg --skip-sync
+
+NEXCESS SYNC:
+  Set these environment variables in .env to enable sf-exports sync:
+    NEXCESS_SF_HOST    - SSH hostname with user (e.g., user@server.nexcess.net)
+    NEXCESS_SF_PATH    - Remote path to sf-exports directory
+
+  Note: sf-exports is ~46MB, syncs to stage server for team baseline consistency
 
 EOF
   exit 0
@@ -74,6 +98,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --skip-sf)
       SKIP_SF=true
+      shift
+      ;;
+    --skip-sync)
+      SKIP_SYNC=true
       shift
       ;;
     --local)
@@ -106,6 +134,99 @@ TIMESTAMP=$(date +"%Y%m%d-%H%M%S")
 OUTPUT_DIR="$AUTOMATION_ROOT/src/workflows/runs/${ENV}-${TIMESTAMP}"
 mkdir -p "$OUTPUT_DIR"
 
+# ============================================
+# SF Exports Sync Functions
+# ============================================
+
+sync_enabled() {
+  if [[ "$SKIP_SYNC" == "true" ]]; then
+    return 1
+  fi
+
+  if [[ -z "$NEXCESS_SF_HOST" ]] || [[ -z "$NEXCESS_SF_PATH" ]]; then
+    return 1
+  fi
+
+  return 0
+}
+
+pull_sf_exports() {
+  if ! sync_enabled; then
+    if [[ "$SKIP_SYNC" == "true" ]]; then
+      echo "⏭️  Skipping sf-exports pull (--skip-sync)"
+    else
+      echo "⏭️  Skipping sf-exports pull (Nexcess not configured)"
+      echo "   Set NEXCESS_SF_HOST and NEXCESS_SF_PATH in .env to enable sync"
+    fi
+    echo ""
+    return 0
+  fi
+
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo "  📥 Pulling sf-exports from Nexcess"
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo ""
+  echo "Syncing FROM: ${NEXCESS_SF_HOST}:${NEXCESS_SF_PATH}/"
+  echo "          TO: ${SF_EXPORTS_DIR}/"
+  echo ""
+
+  if [[ "$TEST_MODE" == "true" ]]; then
+    echo "[TEST MODE] Would run:"
+    echo "  rsync -avz --progress ${NEXCESS_SF_HOST}:${NEXCESS_SF_PATH}/ ${SF_EXPORTS_DIR}/"
+    echo ""
+    return 0
+  fi
+
+  if rsync -avz --progress "${NEXCESS_SF_HOST}:${NEXCESS_SF_PATH}/" "${SF_EXPORTS_DIR}/"; then
+    echo ""
+    echo "✅ Successfully pulled sf-exports from Nexcess"
+    echo ""
+  else
+    echo ""
+    echo "⚠️  Failed to pull sf-exports from Nexcess"
+    echo "   Continuing with local exports..."
+    echo ""
+  fi
+}
+
+push_sf_exports() {
+  if ! sync_enabled; then
+    if [[ "$SKIP_SYNC" == "true" ]]; then
+      echo "⏭️  Skipping sf-exports push (--skip-sync)"
+    else
+      echo "⏭️  Skipping sf-exports push (Nexcess not configured)"
+    fi
+    echo ""
+    return 0
+  fi
+
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo "  📤 Pushing sf-exports to Nexcess"
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo ""
+  echo "Syncing FROM: ${SF_EXPORTS_DIR}/"
+  echo "          TO: ${NEXCESS_SF_HOST}:${NEXCESS_SF_PATH}/"
+  echo ""
+
+  if [[ "$TEST_MODE" == "true" ]]; then
+    echo "[TEST MODE] Would run:"
+    echo "  rsync -avz --progress ${SF_EXPORTS_DIR}/ ${NEXCESS_SF_HOST}:${NEXCESS_SF_PATH}/"
+    echo ""
+    return 0
+  fi
+
+  if rsync -avz --progress "${SF_EXPORTS_DIR}/" "${NEXCESS_SF_HOST}:${NEXCESS_SF_PATH}/"; then
+    echo ""
+    echo "✅ Successfully pushed sf-exports to Nexcess"
+    echo ""
+  else
+    echo ""
+    echo "❌ Failed to push sf-exports to Nexcess"
+    echo "   Your local exports are still available but not shared with team"
+    echo ""
+  fi
+}
+
 echo ""
 echo "========================================="
 echo "  Simple QA + SF Workflow"
@@ -115,9 +236,15 @@ echo "QA Server:    $QA_SERVER_URL"
 echo "Test Mode:    $TEST_MODE"
 echo "Skip QA:      $SKIP_QA"
 echo "Skip SF:      $SKIP_SF"
+echo "Skip Sync:    $SKIP_SYNC"
 echo "Output:       $OUTPUT_DIR"
 echo "========================================="
 echo ""
+
+# ============================================
+# Step 0: Pull latest sf-exports from Nexcess
+# ============================================
+pull_sf_exports
 
 # ============================================
 # Step 1: Start QA Tool (background browser)
@@ -533,6 +660,13 @@ Don't forget to restore /etc/hosts."
     echo "⏭️  STATIC crawl skipped"
     echo ""
   fi
+fi
+
+# ============================================
+# Final Step: Push sf-exports to Nexcess
+# ============================================
+if [[ "$SKIP_SF" == "false" ]] || [[ -n "$SF_OUTDIR" ]] || [[ -n "$LIVE_OUTDIR" ]] || [[ -n "$STATIC_OUTDIR" ]]; then
+  push_sf_exports
 fi
 
 echo "✅ Complete workflow finished!"
