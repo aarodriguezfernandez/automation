@@ -1,185 +1,231 @@
-# QA Workflow Automation
+# QA + Screaming Frog Workflow
 
-Unified orchestration for QA testing and Screaming Frog crawls.
+Simple unified workflow for QA testing and Screaming Frog crawls.
 
 ## Quick Start
 
 ```bash
-# Dry run (safe, shows what would happen)
-./qa-deploy-flow.sh --dry-run --env preprod-avg
-
-# Real execution (no deployment)
-./qa-deploy-flow.sh --env preprod-avg --no-deploy
-
-# Full workflow with deployment option
-./qa-deploy-flow.sh --env preprod-avg --allow-deploy
+cd ~/automation/src/workflows
+./simple-qa-sf.sh --env preprod-avg --local
 ```
 
-## Features
+## What It Does
 
-- ✅ Automated QA test execution (Playwright)
-- ✅ Screaming Frog integration (manual for now)
-- ✅ Unified report generation
-- ✅ Google Chat notifications
-- ✅ Deployment gate validation
-- ✅ Timestamped output directories
-- ✅ Dry-run mode for safe testing
-- ✅ Automatic fallback (API → direct npm)
+**Complete deployment workflow in one script:**
 
-## Architecture
+1. **Preprod Testing**
+   - Starts QA tests (local or remote server)
+   - Runs SF crawl (preprod)
+   - Background watcher notifies when QA completes
 
+2. **Deployment Prompt**
+   - Reviews results
+   - Prompts to deploy via Buddy
+   - Waits for deployment confirmation
+
+3. **Production Verification**
+   - Runs SF crawl (LIVE production)
+   - Runs SF crawl (STATIC production with /etc/hosts)
+
+## Usage
+
+### Basic Commands
+
+```bash
+# Full workflow (local testing)
+./simple-qa-sf.sh --env preprod-avg --local
+
+# Test mode (dry run)
+./simple-qa-sf.sh --env preprod-avg --test --local
+
+# Skip steps
+./simple-qa-sf.sh --env preprod-avg --skip-sf --local    # QA only
+./simple-qa-sf.sh --env preprod-avg --skip-qa            # SF only
 ```
-src/workflows/
-├── qa-deploy-flow.sh       # Main orchestrator
-├── lib/
-│   ├── gchat.sh           # Google Chat notifications
-│   ├── qa-client.sh       # QA tool integration
-│   └── report-builder.sh  # Report generation & gates
-└── runs/                   # Timestamped output directories
-    └── {env}-{timestamp}/
-        ├── qa-stats.json
-        ├── qa-failed.txt
-        ├── unified-report.txt
-        └── sf-exports/
+
+### Flags
+
+- `--env ENV` - QA environment (preprod-avg, stage-avg, prod-avg, preprod-pel, stage-pel, prod-pel)
+- `--local` - Use local QA server (localhost:8884) - auto-starts if needed
+- `--test` - Dry run mode (no execution)
+- `--skip-qa` - Skip QA tests
+- `--skip-sf` - Skip Screaming Frog
+- `--help` - Show help
+
+## Environments
+
+| Environment | Description |
+|------------|-------------|
+| `preprod-avg` | Preprod Avigilon |
+| `stage-avg` | Stage Avigilon |
+| `prod-avg` | Production Avigilon |
+| `preprod-pel` | Preprod Pelco |
+| `stage-pel` | Stage Pelco |
+| `prod-pel` | Production Pelco |
+
+## GChat Notifications
+
+All notifications go to the GChat webhook configured in `.env`:
+
+**Current:** `GCHAT_WEBHOOK_TEST` (testing - Yong and I)  
+**Production:** `GCHAT_WEBHOOK` (VSA Websites QA)
+
+**Notifications sent:**
+- 🚀 QA Tests Started
+- ✅ QA Tests Complete (with results)
+- 🕷️ SF Crawl Started (preprod, LIVE, STATIC)
+- ✅ SF Crawl Complete (preprod, LIVE, STATIC)
+
+## Configuration
+
+All configuration in `.env`:
+
+```bash
+# QA Server
+QA_URL="http://50.28.85.146:8888"       # Remote server
+QA_URL_LOCAL="http://localhost:8884"    # Local server
+QA_USER="admin"
+QA_PASS="..."
+
+# GChat Webhooks
+GCHAT_WEBHOOK_TEST="..."  # Currently active (testing)
+GCHAT_WEBHOOK="..."       # Production (switch when ready)
+```
+
+## Output
+
+Results saved to timestamped directories:
+```
+~/automation/src/workflows/runs/{env}-{timestamp}/
+├── qa-stats.json         # QA test statistics (if available)
+├── qa-last.json          # Full QA results (if available)
+├── watcher.log           # QA completion watcher log
+├── sf-output.log         # Preprod SF output
+├── live-crawl.log        # LIVE SF output
+└── static-crawl.log      # STATIC SF output
 ```
 
 ## Workflow Steps
 
-1. **Validate** - Check environment variables
-2. **QA Tests** - Run Playwright visual regression + accessibility
-3. **Screaming Frog** - Crawl site for SEO/technical issues
-4. **Collect Results** - Gather all outputs
-5. **Generate Report** - Unified report with pass/fail gates
-6. **Send Notification** - GChat webhook
-7. **Evaluate Gates** - Check deployment blockers
-
-## Deployment Gates
-
-### Critical Blockers (prevent deployment)
-- ❌ Internal 404s > 0
-- ❌ QA failed tests > 5
-- ❌ Critical accessibility violations > 0
-
-### Warnings (review required)
-- ⚠️  Missing meta descriptions > 10
-- ⚠️  External 404s > 50
-- ⚠️  Visual changes > 3
-
-## Environment Variables
-
-Required in `.env`:
+### 1. Start Script
 ```bash
-# QA Tool
-QA_TOOL_DIR="$HOME/Data/b8bz8z5a/qa-tool"
-QA_SERVER_URL="http://localhost:8884"
-
-# Screaming Frog
-GCHAT_WEBHOOK="https://chat.googleapis.com/..."
-
-# Environment configs
-QA_ENVS="preprod-avg,stage-avg,prod-avg"
+./simple-qa-sf.sh --env preprod-avg --local
 ```
 
-## Supported Environments
+### 2. Preprod Phase
+- QA tests start (browser opens)
+- SF crawl runs (interactive prompts)
+- Script continues while QA runs in background
 
-- `preprod-avg` - Pre-production Avigilon
-- `stage-avg` - Staging Avigilon
-- `prod-avg` - Production Avigilon
-- `preprod-pel` - Pre-production Pelco
-- `stage-pel` - Staging Pelco
-- `prod-pel` - Production Pelco
+### 3. Deployment Phase
+- **Prompt:** "Ready to deploy? [y/N]"
+- Shows Buddy deployment instructions
+- **Prompt:** "Press ENTER when deployment is complete..."
 
-## Output Structure
+### 4. LIVE Production Phase
+- **Prompt:** "Run LIVE production crawl? [y/N]"
+- Runs sf-extract.sh (interactive - enter URL, choose options)
 
+### 5. STATIC Production Phase
+- **Prompt:** "Run STATIC production crawl? [y/N]"
+- **Prompt:** "Have you configured /etc/hosts? [y/N]"
+- Runs sf-extract.sh (interactive - select STATIC mode)
+- Reminds to restore /etc/hosts
+
+### 6. Complete
+- Shows summary of all results
+- QA completion notification arrives (background)
+
+## Requirements
+
+### 1. QA Server
+For local testing, QA server must be running (script auto-starts):
+```bash
+cd ~/Data/b8bz8z5a/qa-tool
+npm start
 ```
-runs/preprod-avg-20260612-011500/
-├── qa-stats.json          # Test statistics
-├── qa-failed.txt          # Failed test list
-├── qa-last.json           # Full test results
-├── unified-report.txt     # Combined report
-└── sf-exports/            # Screaming Frog data
-    ├── *-report.txt
-    └── *-metrics.json
-```
 
-## Integration with Existing Tools
+### 2. Screaming Frog
+Installed at: `/Applications/Screaming Frog SEO Spider.app/`
 
-### QA Tool Integration
-- **Server Mode**: Uses HTTP API at `http://localhost:8884/run-tests`
-- **Direct Mode**: Falls back to `npm run full:approve`
-- **Auto-detect**: Checks if server is running, chooses best method
+### 3. Environment Variables
+Set in `.env` (see Configuration section)
 
-### Screaming Frog Integration
-- **Current**: Manual execution via `src/sf/sf-extract.sh`
-- **Future**: Automated non-interactive mode
+## Scripts
 
-## Safety Features
+### Main Scripts
+- **`simple-qa-sf.sh`** - Complete workflow (this is all you need)
+- **`watch-qa-completion.sh`** - Background watcher for QA completion (auto-started)
 
-- **No deploy by default**: `--no-deploy` flag prevents accidental deployments
-- **Dry-run mode**: Test workflow without executing
-- **Error handling**: `set -euo pipefail` for bash safety
-- **Timestamped outputs**: Never overwrite previous runs
-- **User confirmations**: Required for destructive operations
+### Supporting Scripts
+Uses existing:
+- `src/sf/sf-extract.sh` - Screaming Frog extraction (3x: preprod, LIVE, STATIC)
 
 ## Troubleshooting
 
-**QA server not running:**
-```
-⚠️  QA server is not running
-   Falling back to direct execution
-```
-Solution: Start QA server with `cd ~/Data/b8bz8z5a/qa-tool && npm start`
-
-**Missing GChat webhook:**
-```
-⚠️  GCHAT_WEBHOOK not set - skipping notification
-```
-Solution: Add `GCHAT_WEBHOOK` to `.env` file
-
-**Permission denied:**
+**QA server not starting:**
 ```bash
-chmod +x src/workflows/qa-deploy-flow.sh
-chmod +x src/workflows/lib/*.sh
+# Check if running
+curl http://localhost:8884
+
+# Or use remote server (remove --local flag)
+./simple-qa-sf.sh --env preprod-avg
 ```
 
-## Future Enhancements
+**SF crawl fails:**
+```bash
+# Test sf-extract.sh directly
+cd ~/automation
+./src/sf/sf-extract.sh
+```
 
-- [ ] Automated Screaming Frog execution
-- [ ] Parallel QA + SF execution
-- [ ] Jira ticket auto-creation from failures
-- [ ] Buddy API deployment integration
-- [ ] Historical metrics tracking
-- [ ] Email notifications
-- [ ] Cron scheduling
-- [ ] Web dashboard
+**GChat notifications not arriving:**
+- Check `GCHAT_WEBHOOK_TEST` in `.env`
+- Verify webhook URL is correct
+
+**Forgot to restore /etc/hosts:**
+- Script reminds you after STATIC crawl
+- Check `/etc/hosts` and remove static entries
 
 ## Examples
 
-### Pre-deployment Check
+### Weekly QA Run (Avigilon)
 ```bash
-# Run full checks before deploying
-./qa-deploy-flow.sh --env preprod-avg --no-deploy
+# Monday morning
+./simple-qa-sf.sh --env preprod-avg --local
 
-# If gates pass, manually deploy on Buddy
-# Then run post-deployment verification
+# Review GChat notifications
+# Deploy via Buddy if no issues
+# Complete LIVE + STATIC verification
 ```
 
-### Post-deployment Verification
+### Quick QA Check (No SF)
 ```bash
-# Verify production after deploy
-./qa-deploy-flow.sh --env prod-avg --no-deploy
+./simple-qa-sf.sh --env preprod-avg --skip-sf --local
 ```
 
-### Weekly QA Runs
+### SF Only (No QA)
 ```bash
-# Run twice per week for all environments
-for env in preprod-avg stage-avg prod-avg; do
-  ./qa-deploy-flow.sh --env $env --no-deploy
-done
+./simple-qa-sf.sh --env preprod-avg --skip-qa
 ```
 
-## Support
+### Test Before Running
+```bash
+./simple-qa-sf.sh --env preprod-avg --test --local
+```
 
-Issues or questions? Check:
-- [QA Tool Repo](https://github.com/aarodriguezfernandez/qa-tool)
-- [Automation Repo](https://github.com/aarodriguezfernandez/automation)
+## Switching to Production GChat
+
+When ready to send to team (after testing):
+
+**Edit `.env` line 16:**
+```bash
+# Change from TEST to production
+GCHAT_WEBHOOK="${GCHAT_WEBHOOK_PROD}"
+```
+
+Or manually update the URL.
+
+---
+
+**Simple. One script. Complete workflow.**
