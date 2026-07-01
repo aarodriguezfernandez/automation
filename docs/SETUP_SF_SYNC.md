@@ -4,9 +4,10 @@
 
 ### Quick Setup (5 minutes)
 
-**Note:** SF sync is **OPTIONAL** but **REQUIRES SSH key access** to Nexcess.
-- **With SSH access:** Automatic baseline sync across team
-- **Without SSH access:** Workflow skips sync, uses local exports only
+**Note:** SF sync is **OPTIONAL** but **REQUIRES SSH access** to Nexcess.
+- **With SSH key:** Automatic (no password prompts)
+- **With password:** You'll be prompted to enter password each time
+- **Without SSH access:** Workflow skips sync if not configured
 
 1. **Update your `.env` file:**
 
@@ -24,16 +25,24 @@ NEXCESS_SF_HOST="a5c5b759_1@f5f43580ac.nxcli.io"
 NEXCESS_SF_PATH="/home/a5c5b759/sf-exports"
 ```
 
-2. **Setup SSH key access (REQUIRED for sync):**
+2. **Setup SSH access (REQUIRED for sync):**
 
-The sync uses rsync over SSH, which requires passwordless SSH key authentication.
+The sync uses rsync over SSH. You can authenticate with:
+- **SSH Key (recommended):** Automatic, no password prompts
+- **Password:** You'll be prompted each time (works but slower)
 
-Test your SSH access:
+**Option A: Test with existing credentials**
+
+If you already have access, test it:
 ```bash
 ssh a5c5b759_1@f5f43580ac.nxcli.io "echo Connected successfully"
 ```
 
-**If this fails, you need to:**
+If prompted for password and it works, you're ready! The sync will prompt for password each time.
+
+**Option B: Setup SSH key (recommended for automation)**
+
+For automatic sync without password prompts:
 
 a) Generate SSH key (if you don't have one):
 ```bash
@@ -51,10 +60,10 @@ c) Once your key is added, test again:
 ssh a5c5b759_1@f5f43580ac.nxcli.io "echo Connected successfully"
 ```
 
-**Until SSH is configured:**
-- QA workflow skips sync automatically
-- Use `--skip-sync` flag to suppress the warning message
-- You can still run QA - it just uses local exports only
+**Without SSH access:**
+- Sync is skipped if credentials aren't in .env
+- Use `--skip-sync` flag to explicitly disable
+- Workflow continues with local exports only
 
 3. **Test the sync:**
 

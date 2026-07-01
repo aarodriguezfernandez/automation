@@ -177,13 +177,26 @@ pull_sf_exports() {
     return 0
   fi
 
-  if rsync -avz --progress "${NEXCESS_SF_HOST}:${NEXCESS_SF_PATH}/" "${SF_EXPORTS_DIR}/"; then
+  # Allow both SSH key and password authentication
+  # If SSH key is set up: automatic
+  # If not: user will be prompted for password
+  echo "   Note: You may be prompted for SSH password if key auth is not configured"
+  echo ""
+
+  if rsync -avz --progress \
+    "${NEXCESS_SF_HOST}:${NEXCESS_SF_PATH}/" "${SF_EXPORTS_DIR}/"; then
     echo ""
     echo "✅ Successfully pulled sf-exports from Nexcess"
     echo ""
   else
     echo ""
     echo "⚠️  Failed to pull sf-exports from Nexcess"
+    echo "   Possible reasons:"
+    echo "   - Incorrect password"
+    echo "   - Network timeout"
+    echo "   - Server unreachable"
+    echo "   - Incorrect path or permissions"
+    echo ""
     echo "   Continuing with local exports..."
     echo ""
   fi
@@ -215,13 +228,26 @@ push_sf_exports() {
     return 0
   fi
 
-  if rsync -avz --progress "${SF_EXPORTS_DIR}/" "${NEXCESS_SF_HOST}:${NEXCESS_SF_PATH}/"; then
+  # Allow both SSH key and password authentication
+  # If SSH key is set up: automatic
+  # If not: user will be prompted for password
+  echo "   Note: You may be prompted for SSH password if key auth is not configured"
+  echo ""
+
+  if rsync -avz --progress \
+    "${SF_EXPORTS_DIR}/" "${NEXCESS_SF_HOST}:${NEXCESS_SF_PATH}/"; then
     echo ""
     echo "✅ Successfully pushed sf-exports to Nexcess"
     echo ""
   else
     echo ""
     echo "❌ Failed to push sf-exports to Nexcess"
+    echo "   Possible reasons:"
+    echo "   - Incorrect password"
+    echo "   - Network timeout"
+    echo "   - Server unreachable"
+    echo "   - Incorrect path or permissions"
+    echo ""
     echo "   Your local exports are still available but not shared with team"
     echo ""
   fi
