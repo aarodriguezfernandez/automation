@@ -172,7 +172,7 @@ pull_sf_exports() {
 
   if [[ "$TEST_MODE" == "true" ]]; then
     echo "[TEST MODE] Would run:"
-    echo "  rsync -avz --progress ${NEXCESS_SF_HOST}:${NEXCESS_SF_PATH}/ ${SF_EXPORTS_DIR}/"
+    echo "  rsync -avz --delete --progress ${NEXCESS_SF_HOST}:${NEXCESS_SF_PATH}/ ${SF_EXPORTS_DIR}/"
     echo ""
     return 0
   fi
@@ -183,10 +183,12 @@ pull_sf_exports() {
   echo "   Note: You may be prompted for SSH password if key auth is not configured"
   echo ""
 
-  if rsync -avz --progress \
+  # --delete ensures local matches remote exactly (removes old exports)
+  if rsync -avz --delete --progress \
     "${NEXCESS_SF_HOST}:${NEXCESS_SF_PATH}/" "${SF_EXPORTS_DIR}/"; then
     echo ""
     echo "✅ Successfully pulled sf-exports from Nexcess"
+    echo "   (local directory now matches remote exactly)"
     echo ""
   else
     echo ""
@@ -223,7 +225,7 @@ push_sf_exports() {
 
   if [[ "$TEST_MODE" == "true" ]]; then
     echo "[TEST MODE] Would run:"
-    echo "  rsync -avz --progress ${SF_EXPORTS_DIR}/ ${NEXCESS_SF_HOST}:${NEXCESS_SF_PATH}/"
+    echo "  rsync -avz --delete --progress ${SF_EXPORTS_DIR}/ ${NEXCESS_SF_HOST}:${NEXCESS_SF_PATH}/"
     echo ""
     return 0
   fi
@@ -234,10 +236,12 @@ push_sf_exports() {
   echo "   Note: You may be prompted for SSH password if key auth is not configured"
   echo ""
 
-  if rsync -avz --progress \
+  # --delete ensures remote matches local exactly (removes old exports from server)
+  if rsync -avz --delete --progress \
     "${SF_EXPORTS_DIR}/" "${NEXCESS_SF_HOST}:${NEXCESS_SF_PATH}/"; then
     echo ""
     echo "✅ Successfully pushed sf-exports to Nexcess"
+    echo "   (remote directory now matches your local exactly)"
     echo ""
   else
     echo ""
@@ -691,9 +695,10 @@ fi
 # ============================================
 # Final Step: Push sf-exports to Nexcess
 # ============================================
-if [[ "$SKIP_SF" == "false" ]] || [[ -n "$SF_OUTDIR" ]] || [[ -n "$LIVE_OUTDIR" ]] || [[ -n "$STATIC_OUTDIR" ]]; then
-  push_sf_exports
-fi
+# Always push after any QA run to keep team in sync
+# Even if SF was skipped, QA might have generated data
+# This ensures other developers running different envs get your latest exports
+push_sf_exports
 
 echo "✅ Complete workflow finished!"
 echo ""
