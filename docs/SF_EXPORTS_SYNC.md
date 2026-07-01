@@ -41,10 +41,15 @@ Server configuration is stored in `.env.servers` (created automatically). This f
 1. **Before QA runs:** Pulls latest sf-exports from Nexcess
    - Ensures you start with team's most recent baseline
    - Your QA results will be comparable with others
+   - Uses `--delete` to mirror exactly (removes old exports)
 
-2. **After SF crawls complete:** Pushes new exports to Nexcess
+2. **After EVERY QA run:** Pushes new exports to Nexcess
+   - Happens even if you run with `--skip-sf`
    - Shares your fresh results with the team
+   - Uses `--delete` to mirror exactly (removes old exports from server)
    - Becomes the new baseline for next developer
+   
+**Important:** The push runs after every QA run (not just SF crawls) to keep the team in sync even when running different environments (e.g., preprod-avg vs preprod-pel).
 
 ### Workflow Visualization
 
@@ -97,6 +102,23 @@ Use the standalone script for manual control:
 - **Current size:** ~46MB
 - **Reasonable for rsync:** Yes, syncs quickly over network
 - **Contains:** Timestamped crawl directories with HTML, reports, and metadata
+- **Cleanup:** Old exports are automatically removed via `--delete` flag
+
+## How --delete Works
+
+The sync uses `rsync --delete` to ensure exact mirroring:
+
+**On Pull:**
+- Your local `sf-exports/` becomes exact copy of Nexcess
+- Old local exports not on Nexcess are deleted
+- Prevents accumulation of stale local data
+
+**On Push:**
+- Nexcess becomes exact copy of your local `sf-exports/`
+- Old exports on Nexcess not in your local are deleted
+- Team always gets your current state, not accumulated history
+
+This means the shared directory only contains the latest exports from whoever pushed last.
 
 ## Server Location
 

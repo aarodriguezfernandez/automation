@@ -13,9 +13,11 @@ The sf-exports sync feature is now active in the QA workflow. Here's what you ne
 ```
 
 The workflow now automatically:
-1. 📥 Pulls latest sf-exports from Nexcess before starting
+1. 📥 Pulls latest sf-exports from Nexcess before starting (exact mirror with `--delete`)
 2. 🔄 Runs QA/SF as normal
-3. 📤 Pushes new sf-exports to Nexcess after completion
+3. 📤 Pushes new sf-exports to Nexcess after completion (exact mirror with `--delete`)
+
+**Note:** The push happens after EVERY QA run (even with `--skip-sf`) to keep team in sync across different environments.
 
 Your local `.env` already has the sync configuration set up.
 
