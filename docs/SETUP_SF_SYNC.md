@@ -17,12 +17,19 @@ cp .env.example .env
 # Then edit .env and fill in your credentials
 ```
 
-Add these two lines to your `.env` file (uncomment if using .env.example):
+Add these two lines to your `.env` file with **YOUR Nexcess username**:
 
 ```bash
 # SF Exports Nexcess Sync Configuration
-NEXCESS_SF_HOST="a5c5b759_1@f5f43580ac.nxcli.io"
+NEXCESS_SF_HOST="YOUR_NEXCESS_USER@f5f43580ac.nxcli.io"
 NEXCESS_SF_PATH="/home/a5c5b759/sf-exports"
+```
+
+**Important:** Replace `YOUR_NEXCESS_USER` with your actual Nexcess SSH username.
+
+Example: If your username is `john_doe_1`, it would be:
+```bash
+NEXCESS_SF_HOST="john_doe_1@f5f43580ac.nxcli.io"
 ```
 
 2. **Setup SSH access (REQUIRED for sync):**
@@ -33,9 +40,9 @@ The sync uses rsync over SSH. You can authenticate with:
 
 **Option A: Test with existing credentials**
 
-If you already have access, test it:
+If you already have access, test it (replace YOUR_NEXCESS_USER):
 ```bash
-ssh a5c5b759_1@f5f43580ac.nxcli.io "echo Connected successfully"
+ssh YOUR_NEXCESS_USER@f5f43580ac.nxcli.io "echo Connected successfully"
 ```
 
 If prompted for password and it works, you're ready! The sync will prompt for password each time.
@@ -55,9 +62,9 @@ cat ~/.ssh/id_ed25519.pub
 # Or: cat ~/.ssh/id_rsa.pub
 ```
 
-c) Once your key is added, test again:
+c) Once your key is added, test again (with YOUR username):
 ```bash
-ssh a5c5b759_1@f5f43580ac.nxcli.io "echo Connected successfully"
+ssh YOUR_NEXCESS_USER@f5f43580ac.nxcli.io "echo Connected successfully"
 ```
 
 **Without SSH access:**

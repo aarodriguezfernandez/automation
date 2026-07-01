@@ -35,16 +35,22 @@ Your local `.env` already has the sync configuration set up.
    cp .env.example .env
    ```
    
-   Then add these two lines (or uncomment from .env.example):
+   Then add these two lines with **YOUR Nexcess username**:
    ```bash
-   NEXCESS_SF_HOST="a5c5b759_1@f5f43580ac.nxcli.io"
+   NEXCESS_SF_HOST="YOUR_NEXCESS_USER@f5f43580ac.nxcli.io"
    NEXCESS_SF_PATH="/home/a5c5b759/sf-exports"
    ```
+   
+   **Replace `YOUR_NEXCESS_USER` with your actual Nexcess SSH username.**
+   
+   Example: `NEXCESS_SF_HOST="john_doe_1@f5f43580ac.nxcli.io"`
 
-3. **Test SSH access:**
+3. **Test SSH access (with YOUR username):**
    ```bash
-   ssh a5c5b759_1@f5f43580ac.nxcli.io "echo OK"
+   ssh YOUR_NEXCESS_USER@f5f43580ac.nxcli.io "echo OK"
    ```
+   
+   Replace `YOUR_NEXCESS_USER` with your actual Nexcess username.
    
    - If it works without password → You're all set!
    - If it prompts for password → Enter it (you'll be prompted each time sync runs)

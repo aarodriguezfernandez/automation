@@ -12,16 +12,18 @@ The sf-exports sync feature ensures all developers work from the same baseline d
 
 ### 1. Main Configuration (.env)
 
-Add these variables to your `.env` file:
+Add these variables to your `.env` file with **YOUR Nexcess username**:
 
 ```bash
 # SF Exports Nexcess Sync Configuration
-# Default to Avigilon stage server for sf-exports sync
 # Size: ~46MB (reasonable for rsync)
 # Other developers pull before QA to ensure consistent baselines
-NEXCESS_SF_HOST="a5c5b759_1@f5f43580ac.nxcli.io"
+# IMPORTANT: Use YOUR own Nexcess SSH username
+NEXCESS_SF_HOST="YOUR_NEXCESS_USER@f5f43580ac.nxcli.io"
 NEXCESS_SF_PATH="/home/a5c5b759/sf-exports"
 ```
+
+Replace `YOUR_NEXCESS_USER` with your actual Nexcess SSH username.
 
 ### 2. Server Details (.env.servers)
 
@@ -100,19 +102,19 @@ Use the standalone script for manual control:
 
 **Target:** Nexcess Stage Server (Avigilon)
 - **Server:** f5f43580ac.nxcli.io
-- **User:** a5c5b759_1
-- **Path:** /home/a5c5b759/sf-exports
+- **User:** YOUR_NEXCESS_USER (each developer has their own username)
+- **Path:** /home/a5c5b759/sf-exports (shared directory, same for everyone)
 - **Why stage?** Most accessible for all developers, stable environment
 
 ## Troubleshooting
 
 ### Sync fails with "Permission denied"
 
-Ensure your SSH key is set up for the Nexcess server:
+Ensure your SSH key is set up for the Nexcess server (use YOUR username):
 
 ```bash
-# Test SSH connection
-ssh a5c5b759_1@f5f43580ac.nxcli.io "echo Connection successful"
+# Test SSH connection (replace YOUR_NEXCESS_USER)
+ssh YOUR_NEXCESS_USER@f5f43580ac.nxcli.io "echo Connection successful"
 ```
 
 ### Skip sync for local testing
