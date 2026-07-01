@@ -50,6 +50,7 @@ cd ~/automation/src/workflows
 - `--test` - Dry run mode (no execution)
 - `--skip-qa` - Skip QA tests
 - `--skip-sf` - Skip Screaming Frog
+- `--skip-sync` - Skip sf-exports sync with Nexcess (see SF Exports Sync below)
 - `--help` - Show help
 
 ## Environments
@@ -91,7 +92,13 @@ QA_PASS="..."
 # GChat Webhooks
 GCHAT_WEBHOOK_TEST="..."  # Currently active (testing)
 GCHAT_WEBHOOK="..."       # Production (switch when ready)
+
+# SF Exports Sync (Optional - for team baseline consistency)
+NEXCESS_SF_HOST="YOUR_NEXCESS_USER@f5f43580ac.nxcli.io"
+NEXCESS_SF_PATH="/home/a5c5b759/sf-exports"
 ```
+
+See **SF Exports Sync** section below for setup details.
 
 ## Output
 
@@ -163,11 +170,62 @@ Installed at: `/Applications/Screaming Frog SEO Spider.app/`
 
 Set in `.env` (see Configuration section)
 
+## SF Exports Sync (NEW)
+
+**Automatic baseline sync for consistent QA across team.**
+
+### What It Does
+
+- **Before QA:** Pulls latest sf-exports from Nexcess (get team's baseline)
+- **After SF:** Pushes new sf-exports to Nexcess (share your results)
+- **Result:** Everyone's QA numbers match because they use the same baseline
+
+### Setup (2 minutes)
+
+Add to your `.env`:
+
+```bash
+NEXCESS_SF_HOST="YOUR_NEXCESS_USER@f5f43580ac.nxcli.io"
+NEXCESS_SF_PATH="/home/a5c5b759/sf-exports"
+```
+
+**Replace `YOUR_NEXCESS_USER` with your actual Nexcess SSH username.**
+
+### How to Use
+
+**Automatic (recommended):**
+```bash
+# Just run normally - sync happens automatically
+./simple-qa-sf.sh --env preprod-avg
+```
+
+**Manual control:**
+```bash
+# Pull latest before QA
+./sync-sf-exports.sh pull
+
+# Push yours after QA
+./sync-sf-exports.sh push
+```
+
+**Skip sync:**
+```bash
+# If you don't have SSH access or want to work offline
+./simple-qa-sf.sh --env preprod-avg --skip-sync
+```
+
+### Documentation
+
+📖 **[Quick Start Guide](../../docs/QUICK_START.md)** - Setup in 2 minutes  
+📖 **[Setup Guide](../../docs/SETUP_SF_SYNC.md)** - Detailed SSH setup  
+📖 **[Technical Docs](../../docs/SF_EXPORTS_SYNC.md)** - Complete reference
+
 ## Scripts
 
 ### Main Scripts
 
-- **`simple-qa-sf.sh`** - Complete workflow (this is all you need)
+- **`simple-qa-sf.sh`** - Complete workflow (includes automatic SF sync)
+- **`sync-sf-exports.sh`** - Manual SF exports sync control
 - **`watch-qa-completion.sh`** - Background watcher for QA completion (auto-started)
 
 ### Supporting Scripts
