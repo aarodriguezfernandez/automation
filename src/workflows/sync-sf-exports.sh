@@ -67,7 +67,7 @@ fi
 
 # Validate configuration
 if [[ -z "$NEXCESS_SF_HOST" ]] || [[ -z "$NEXCESS_SF_PATH" ]]; then
-  echo "❌ Error: Nexcess not configured"
+  echo "Error: Nexcess not configured"
   echo ""
   echo "Set these environment variables in .env:"
   echo "  NEXCESS_SF_HOST    - SSH hostname with user (e.g., user@server.nexcess.net)"
@@ -80,9 +80,9 @@ fi
 mkdir -p "$SF_EXPORTS_DIR"
 
 pull_exports() {
-  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-  echo "  📥 Pulling sf-exports from Nexcess"
-  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo "=========================================="
+  echo "Pulling sf-exports from Nexcess"
+  echo "=========================================="
   echo ""
   echo "FROM: ${NEXCESS_SF_HOST}:${NEXCESS_SF_PATH}/"
   echo "  TO: ${SF_EXPORTS_DIR}/"
@@ -94,13 +94,13 @@ pull_exports() {
   # --delete ensures local matches remote exactly
   if rsync -avz --delete --progress "${NEXCESS_SF_HOST}:${NEXCESS_SF_PATH}/" "${SF_EXPORTS_DIR}/"; then
     echo ""
-    echo "✅ Successfully pulled sf-exports from Nexcess"
-    echo "   (local directory now matches remote exactly)"
+    echo "Successfully pulled sf-exports from Nexcess"
+    echo "(local directory now matches remote exactly)"
     echo ""
     return 0
   else
     echo ""
-    echo "❌ Failed to pull sf-exports from Nexcess"
+    echo "Failed to pull sf-exports from Nexcess"
     echo ""
     echo "Possible reasons:"
     echo "  - Incorrect password or authentication failed"
@@ -112,9 +112,9 @@ pull_exports() {
 }
 
 push_exports() {
-  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-  echo "  📤 Pushing sf-exports to Nexcess"
-  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo "=========================================="
+  echo "Pushing sf-exports to Nexcess"
+  echo "=========================================="
   echo ""
   echo "FROM: ${SF_EXPORTS_DIR}/"
   echo "  TO: ${NEXCESS_SF_HOST}:${NEXCESS_SF_PATH}/"
@@ -126,13 +126,13 @@ push_exports() {
   # --delete ensures remote matches local exactly
   if rsync -avz --delete --progress "${SF_EXPORTS_DIR}/" "${NEXCESS_SF_HOST}:${NEXCESS_SF_PATH}/"; then
     echo ""
-    echo "✅ Successfully pushed sf-exports to Nexcess"
-    echo "   (remote directory now matches your local exactly)"
+    echo "Successfully pushed sf-exports to Nexcess"
+    echo "(remote directory now matches your local exactly)"
     echo ""
     return 0
   else
     echo ""
-    echo "❌ Failed to push sf-exports to Nexcess"
+    echo "Failed to push sf-exports to Nexcess"
     echo ""
     echo "Possible reasons:"
     echo "  - Incorrect password or authentication failed"

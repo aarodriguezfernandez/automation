@@ -120,7 +120,7 @@ done
 
 # Validate required args
 if [[ -z "$ENV" ]]; then
-  echo "❌ Error: --env is required"
+  echo "Error: --env is required"
   usage
 fi
 
@@ -153,18 +153,18 @@ sync_enabled() {
 pull_sf_exports() {
   if ! sync_enabled; then
     if [[ "$SKIP_SYNC" == "true" ]]; then
-      echo "⏭️  Skipping sf-exports pull (--skip-sync)"
+      echo "Skipping sf-exports pull (--skip-sync)"
     else
-      echo "⏭️  Skipping sf-exports pull (Nexcess not configured)"
+      echo "Skipping sf-exports pull (Nexcess not configured)"
       echo "   Set NEXCESS_SF_HOST and NEXCESS_SF_PATH in .env to enable sync"
     fi
     echo ""
     return 0
   fi
 
-  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-  echo "  📥 Pulling sf-exports from Nexcess"
-  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo "=========================================="
+  echo "  Pulling sf-exports from Nexcess"
+  echo "=========================================="
   echo ""
   echo "Syncing FROM: ${NEXCESS_SF_HOST}:${NEXCESS_SF_PATH}/"
   echo "          TO: ${SF_EXPORTS_DIR}/"
@@ -187,12 +187,12 @@ pull_sf_exports() {
   if rsync -avz --delete --progress \
     "${NEXCESS_SF_HOST}:${NEXCESS_SF_PATH}/" "${SF_EXPORTS_DIR}/"; then
     echo ""
-    echo "✅ Successfully pulled sf-exports from Nexcess"
+    echo "Successfully pulled sf-exports from Nexcess"
     echo "   (local directory now matches remote exactly)"
     echo ""
   else
     echo ""
-    echo "⚠️  Failed to pull sf-exports from Nexcess"
+    echo "Failed to pull sf-exports from Nexcess"
     echo "   Possible reasons:"
     echo "   - Incorrect password"
     echo "   - Network timeout"
@@ -207,17 +207,17 @@ pull_sf_exports() {
 push_sf_exports() {
   if ! sync_enabled; then
     if [[ "$SKIP_SYNC" == "true" ]]; then
-      echo "⏭️  Skipping sf-exports push (--skip-sync)"
+      echo "Skipping sf-exports push (--skip-sync)"
     else
-      echo "⏭️  Skipping sf-exports push (Nexcess not configured)"
+      echo "Skipping sf-exports push (Nexcess not configured)"
     fi
     echo ""
     return 0
   fi
 
-  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-  echo "  📤 Pushing sf-exports to Nexcess"
-  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo "=========================================="
+  echo "  Pushing sf-exports to Nexcess"
+  echo "=========================================="
   echo ""
   echo "Syncing FROM: ${SF_EXPORTS_DIR}/"
   echo "          TO: ${NEXCESS_SF_HOST}:${NEXCESS_SF_PATH}/"
@@ -240,12 +240,12 @@ push_sf_exports() {
   if rsync -avz --delete --progress \
     "${SF_EXPORTS_DIR}/" "${NEXCESS_SF_HOST}:${NEXCESS_SF_PATH}/"; then
     echo ""
-    echo "✅ Successfully pushed sf-exports to Nexcess"
+    echo "Successfully pushed sf-exports to Nexcess"
     echo "   (remote directory now matches your local exactly)"
     echo ""
   else
     echo ""
-    echo "❌ Failed to push sf-exports to Nexcess"
+    echo "Failed to push sf-exports to Nexcess"
     echo "   Possible reasons:"
     echo "   - Incorrect password"
     echo "   - Network timeout"
@@ -281,7 +281,7 @@ pull_sf_exports
 # ============================================
 if [[ "$SKIP_QA" == "false" ]]; then
   if [[ "$TEST_MODE" == "false" ]]; then
-    echo "▶️  Starting QA tests..."
+    echo "Starting QA tests..."
     echo "   Environment: $ENV"
     echo "   Server: $QA_SERVER_URL"
     echo ""
@@ -290,12 +290,12 @@ if [[ "$SKIP_QA" == "false" ]]; then
     echo "   Checking if QA server is running..."
     if ! curl -s --max-time 2 "$QA_SERVER_URL" >/dev/null 2>&1; then
       if [[ "$USE_LOCAL" == "true" ]]; then
-        echo "   ⚠️  Local QA server not running"
-        echo "   🚀 Starting local QA server..."
+        echo "   Local QA server not running"
+        echo "   Starting local QA server..."
         echo ""
 
         if [[ ! -d "$QA_TOOL_DIR" ]]; then
-          echo "❌ QA tool directory not found: $QA_TOOL_DIR"
+          echo "QA tool directory not found: $QA_TOOL_DIR"
           exit 1
         fi
 
@@ -323,14 +323,14 @@ if [[ "$SKIP_QA" == "false" ]]; then
 
         if [ $elapsed -ge $max_wait ]; then
           echo ""
-          echo "❌ QA server failed to start within ${max_wait}s"
+          echo "QA server failed to start within ${max_wait}s"
           echo "   Check logs: /tmp/qa-server.log"
           exit 1
         fi
 
         cd "$AUTOMATION_ROOT" || exit 1
       else
-        echo "❌ QA server is not running at $QA_SERVER_URL"
+        echo "QA server is not running at $QA_SERVER_URL"
         exit 1
       fi
     else
@@ -351,18 +351,18 @@ if [[ "$SKIP_QA" == "false" ]]; then
     response=$("${curl_cmd[@]}" 2>&1 || echo "ERROR")
 
     if [[ "$response" == "ERROR" ]] || [[ -z "$response" ]]; then
-      echo "❌ Failed to start QA tests"
+      echo "Failed to start QA tests"
       exit 1
     fi
 
-    echo "✅ QA tests started (browser should open)"
+    echo "QA tests started (browser should open)"
     echo "   Tests are running in the background"
     echo ""
 
     # Send start notification to GChat (testing webhook)
-    echo "📤 Sending start notification to GChat..."
+    echo "Sending start notification to GChat..."
 
-    START_MESSAGE="🚀 QA Tests Started
+    START_MESSAGE="QA Tests Started
 
 Environment: $ENV
 Server: $QA_SERVER_URL
@@ -387,7 +387,7 @@ Tests are running..."
     echo ""
 
     # Start watcher in background to notify when complete
-    echo "👀 Starting completion watcher..."
+    echo "Starting completion watcher..."
     nohup "$SCRIPT_DIR/watch-qa-completion.sh" "$ENV" > "$OUTPUT_DIR/watcher.log" 2>&1 &
     WATCHER_PID=$!
     echo "   Watcher started (PID: $WATCHER_PID)"
@@ -399,9 +399,9 @@ Tests are running..."
     echo ""
 
     # Send TEST notification to GChat
-    echo "📤 Sending TEST notification to GChat..."
+    echo "Sending TEST notification to GChat..."
 
-    TEST_MESSAGE="🧪 TEST MODE - QA Workflow
+    TEST_MESSAGE="TEST MODE - QA Workflow
 
 Environment: $ENV
 Server: $QA_SERVER_URL
@@ -427,7 +427,7 @@ This is a test notification."
     echo ""
   fi
 else
-  echo "⏭️  Skipping QA tests"
+  echo "Skipping QA tests"
   echo ""
 fi
 
@@ -440,10 +440,10 @@ STATIC_OUTDIR=""
 
 if [[ "$SKIP_SF" == "false" ]]; then
   if [[ "$TEST_MODE" == "false" ]]; then
-    echo "▶️  Starting Screaming Frog crawl..."
+    echo "Starting Screaming Frog crawl..."
     echo "   sf-extract.sh will prompt you for all options"
     echo ""
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "=========================================="
     echo ""
 
     # Run SF script as-is - completely interactive
@@ -458,7 +458,7 @@ if [[ "$SKIP_SF" == "false" ]]; then
       SF_OUTDIR=$(grep -oE "Export OUTDIR: \[.*\]" "$SF_LOG" | sed 's/Export OUTDIR: \[\(.*\)\]/\1/' | tail -1)
 
       echo ""
-      echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+      echo "=========================================="
       echo ""
       echo "✅ Screaming Frog crawl complete"
       if [[ -n "$SF_OUTDIR" ]]; then
@@ -476,7 +476,7 @@ if [[ "$SKIP_SF" == "false" ]]; then
     echo ""
   fi
 else
-  echo "⏭️  Skipping Screaming Frog"
+  echo "Skipping Screaming Frog"
   echo ""
 fi
 
@@ -485,9 +485,9 @@ fi
 # ============================================
 if [[ "$TEST_MODE" == "false" ]] && [[ "$SKIP_SF" == "false" ]]; then
   if [[ -n "$SF_OUTDIR" ]] && [[ -d "$SF_OUTDIR" ]]; then
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "=========================================="
     echo "  Screaming Frog Report"
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "=========================================="
 
     # Find SF report in the output directory
     SF_REPORT=$(find "$SF_OUTDIR" -name "*-report.txt" | head -1)
@@ -496,7 +496,7 @@ if [[ "$TEST_MODE" == "false" ]] && [[ "$SKIP_SF" == "false" ]]; then
     else
       echo "SF report not found in: $SF_OUTDIR"
     fi
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "=========================================="
     echo ""
   fi
 fi
@@ -505,17 +505,17 @@ fi
 # Step 4: Deployment Prompt
 # ============================================
 if [[ "$TEST_MODE" == "false" ]] && [[ "$SKIP_SF" == "false" ]]; then
-  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo "=========================================="
   echo "  Deployment"
-  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo "=========================================="
   echo ""
   echo "Review the preprod results above."
   echo ""
-  read -rp "🚀 Ready to deploy? [y/N] " DEPLOY_READY
+  read -rp "Ready to deploy? [y/N] " DEPLOY_READY
 
   if [[ ! "$DEPLOY_READY" =~ ^[Yy]$ ]]; then
     echo ""
-    echo "⏭️  Deployment skipped - workflow stopped"
+    echo "Deployment skipped - workflow stopped"
     echo ""
     exit 0
   fi
@@ -536,9 +536,9 @@ if [[ "$TEST_MODE" == "false" ]] && [[ "$SKIP_SF" == "false" ]]; then
   # ============================================
   # Step 5: LIVE Production SF Crawl
   # ============================================
-  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo "=========================================="
   echo "  LIVE Production Crawl"
-  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo "=========================================="
   echo ""
   echo "Now run SF crawl for LIVE production site"
   echo ""
@@ -547,10 +547,10 @@ if [[ "$TEST_MODE" == "false" ]] && [[ "$SKIP_SF" == "false" ]]; then
 
   if [[ "$RUN_LIVE" =~ ^[Yy]$ ]]; then
     echo ""
-    echo "📤 Sending LIVE crawl notification..."
+    echo "Sending LIVE crawl notification..."
 
 
-    LIVE_START_MESSAGE="🕷️ LIVE Production Crawl Started
+    LIVE_START_MESSAGE="LIVE Production Crawl Started
 
 Time: $(date '+%Y-%m-%d %H:%M:%S')
 
@@ -564,10 +564,10 @@ Running LIVE crawl (interactive mode)..."
 
     echo "   ✓ Notification sent"
     echo ""
-    echo "▶️  Starting LIVE crawl..."
+    echo "Starting LIVE crawl..."
     echo "   sf-extract.sh will prompt you for all options"
     echo ""
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "=========================================="
     echo ""
 
     cd "$AUTOMATION_ROOT" || exit 1
@@ -577,14 +577,14 @@ Running LIVE crawl (interactive mode)..."
       LIVE_OUTDIR=$(grep -oE "Export OUTDIR: \[.*\]" "$LIVE_LOG" | sed 's/Export OUTDIR: \[\(.*\)\]/\1/' | tail -1)
 
       echo ""
-      echo "✅ LIVE crawl complete"
+      echo "LIVE crawl complete"
       if [[ -n "$LIVE_OUTDIR" ]]; then
         echo "   Output: $LIVE_OUTDIR"
       fi
       echo ""
 
       # Send completion notification
-      LIVE_COMPLETE_MESSAGE="✅ LIVE Production Crawl Complete
+      LIVE_COMPLETE_MESSAGE="LIVE Production Crawl Complete
 
 Time: $(date '+%Y-%m-%d %H:%M:%S')
 
@@ -601,16 +601,16 @@ LIVE crawl finished successfully!"
       echo ""
     fi
   else
-    echo "⏭️  LIVE crawl skipped"
+    echo "LIVE crawl skipped"
     echo ""
   fi
 
   # ============================================
   # Step 6: STATIC Production SF Crawl
   # ============================================
-  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo "=========================================="
   echo "  STATIC Production Crawl"
-  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo "=========================================="
   echo ""
   echo "⚠️  STATIC crawl requires /etc/hosts configuration"
   echo "   Point production domain to static target (S3/AWS)"
@@ -624,13 +624,13 @@ LIVE crawl finished successfully!"
 
     if [[ ! "$HOSTS_READY" =~ ^[Yy]$ ]]; then
       echo ""
-      echo "⏭️  STATIC crawl skipped - /etc/hosts not ready"
+      echo "STATIC crawl skipped - /etc/hosts not ready"
       echo ""
     else
       echo ""
-      echo "📤 Sending STATIC crawl notification..."
+      echo "Sending STATIC crawl notification..."
 
-      STATIC_START_MESSAGE="🕷️ STATIC Production Crawl Started
+      STATIC_START_MESSAGE="STATIC Production Crawl Started
 
 Time: $(date '+%Y-%m-%d %H:%M:%S')
 
@@ -645,11 +645,11 @@ Make sure to select STATIC mode!"
 
       echo "   ✓ Notification sent"
       echo ""
-      echo "▶️  Starting STATIC crawl..."
+      echo "Starting STATIC crawl..."
       echo "   sf-extract.sh will prompt you for all options"
       echo "   ⚠️  Make sure to select 'STATIC' mode when prompted!"
       echo ""
-      echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+      echo "=========================================="
       echo ""
 
       cd "$AUTOMATION_ROOT" || exit 1
@@ -659,7 +659,7 @@ Make sure to select STATIC mode!"
         STATIC_OUTDIR=$(grep -oE "Export OUTDIR: \[.*\]" "$STATIC_LOG" | sed 's/Export OUTDIR: \[\(.*\)\]/\1/' | tail -1)
 
         echo ""
-        echo "✅ STATIC crawl complete"
+        echo "STATIC crawl complete"
         if [[ -n "$STATIC_OUTDIR" ]]; then
           echo "   Output: $STATIC_OUTDIR"
         fi
@@ -668,7 +668,7 @@ Make sure to select STATIC mode!"
         echo ""
 
         # Send completion notification
-        STATIC_COMPLETE_MESSAGE="✅ STATIC Production Crawl Complete
+        STATIC_COMPLETE_MESSAGE="STATIC Production Crawl Complete
 
 Time: $(date '+%Y-%m-%d %H:%M:%S')
 
@@ -687,7 +687,7 @@ Don't forget to restore /etc/hosts."
       fi
     fi
   else
-    echo "⏭️  STATIC crawl skipped"
+    echo "STATIC crawl skipped"
     echo ""
   fi
 fi
@@ -700,19 +700,19 @@ fi
 # This ensures other developers running different envs get your latest exports
 push_sf_exports
 
-echo "✅ Complete workflow finished!"
+echo "Complete workflow finished!"
 echo ""
 if [[ "$SKIP_QA" == "false" ]]; then
-  echo "📝 QA tests are running in the background"
+  echo "QA tests are running in the background"
   echo "   You'll receive a notification when they complete"
   echo ""
 fi
 if [[ -n "$SF_OUTDIR" ]]; then
-  echo "📁 Preprod SF results: $SF_OUTDIR"
+  echo "Preprod SF results: $SF_OUTDIR"
 fi
 if [[ -n "$LIVE_OUTDIR" ]]; then
-  echo "📁 LIVE SF results: $LIVE_OUTDIR"
+  echo "LIVE SF results: $LIVE_OUTDIR"
 fi
 if [[ -n "$STATIC_OUTDIR" ]]; then
-  echo "📁 STATIC SF results: $STATIC_OUTDIR"
+  echo "STATIC SF results: $STATIC_OUTDIR"
 fi

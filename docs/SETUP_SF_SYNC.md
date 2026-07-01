@@ -107,10 +107,10 @@ Now when you run QA workflows, it will automatically:
 ```
 
 The script will:
-1. 📥 Pull latest sf-exports from Nexcess (get baseline)
-2. ▶️  Run your QA tests
+1.  Pull latest sf-exports from Nexcess (get baseline)
+2.   Run your QA tests
 3. 🕷️ Run SF crawls
-4. 📤 Push new sf-exports to Nexcess (share results)
+4.  Push new sf-exports to Nexcess (share results)
 
 ### Skip Sync (if needed)
 

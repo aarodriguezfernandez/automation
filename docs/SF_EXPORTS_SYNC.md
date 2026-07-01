@@ -155,11 +155,11 @@ Use the `--skip-sync` flag:
 
 ## Benefits
 
-1. ✅ **Consistent baselines** - All devs compare against same data
-2. ✅ **No manual steps** - Automatic pull/push in workflow
-3. ✅ **Version history** - Timestamped directories preserve history
-4. ✅ **Team collaboration** - Share results automatically
-5. ✅ **No conflicts** - Timestamped directories don't collide
+1.  **Consistent baselines** - All devs compare against same data
+2.  **No manual steps** - Automatic pull/push in workflow
+3.  **Version history** - Timestamped directories preserve history
+4.  **Team collaboration** - Share results automatically
+5.  **No conflicts** - Timestamped directories don't collide
 
 ## Related Files
 
