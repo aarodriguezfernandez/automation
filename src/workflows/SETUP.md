@@ -46,11 +46,12 @@ QA_PASS="your-password-here"
 # GChat Webhook (testing)
 GCHAT_WEBHOOK_TEST="your-test-webhook-url"
 
-# GChat Webhook (production) 
+# GChat Webhook (production)
 GCHAT_WEBHOOK="your-production-webhook-url"
 ```
 
 **Ask your team lead for:**
+
 - QA server credentials (`QA_USER`, `QA_PASS`)
 - GChat webhook URLs
 
@@ -70,6 +71,7 @@ chmod +x ../sf/sf-extract.sh
 ```
 
 You should see:
+
 - Test workflow output
 - GChat test notification (if webhook configured)
 
@@ -83,6 +85,7 @@ You should see:
 ```
 
 **What happens:**
+
 1. QA tests start on remote server
 2. SF crawl runs (preprod) - interactive prompts
 3. You're prompted to deploy via Buddy
@@ -113,6 +116,7 @@ Enter URL: _
 ```
 
 **You type the URL manually each time:**
+
 - Preprod SF: `https://preprod.avigilon.com` or `https://preprod.pelco.com`
 - LIVE SF: `https://www.avigilon.com` or `https://www.pelco.com`
 - STATIC SF: `https://www.avigilon.com` or `https://www.pelco.com` (via /etc/hosts)
@@ -135,10 +139,12 @@ Enter URL: _
 **Note:** `--local` flag is for developers who have the qa-tool project locally.
 
 **If you don't have qa-tool locally:**
+
 - **Don't use** the `--local` flag
 - Script will use remote QA server automatically
 
 **If you have qa-tool locally:**
+
 ```bash
 # The script will auto-start local server if needed
 ./simple-qa-sf.sh --env preprod-avg --local
@@ -149,16 +155,19 @@ Enter URL: _
 All notifications go to the configured webhook in `.env`.
 
 **During testing:**
-- Use `GCHAT_WEBHOOK_TEST` 
+
+- Use `GCHAT_WEBHOOK_TEST`
 - Notifications go to test space
 
 **For production:**
+
 - Switch to `GCHAT_WEBHOOK`
 - Edit line in `.env` or ask team lead
 
 ## Screaming Frog: Step-by-Step
 
 **SF runs 3 times during full workflow:**
+
 1. Preprod crawl (before deployment)
 2. LIVE production crawl (after deployment)
 3. STATIC production crawl (after deployment)
@@ -166,6 +175,7 @@ All notifications go to the configured webhook in `.env`.
 **Each time you'll see these prompts:**
 
 ### Step 1: Choose Mode
+
 ```
 1) Use existing crawl
 2) Run new crawl
@@ -174,25 +184,30 @@ Select option:
 ```
 
 **For new crawl (typical):**
+
 - Choose `2`
 - Continue to Step 2
 
 **For existing crawl (reuse previous):**
+
 - Choose `1`
 - Select from list (no URL needed)
 - Skip to Step 3
 
 ### Step 2: Enter URL
+
 ```
 Enter URL: _
 ```
 
 **Type the full URL:**
+
 - Preprod: `https://preprod.avigilon.com` or `https://preprod.pelco.com`
 - LIVE: `https://www.avigilon.com` or `https://www.pelco.com`
 - STATIC: `https://www.avigilon.com` or `https://www.pelco.com` (same as LIVE)
 
 ### Step 3: Choose Crawl Type
+
 ```
 1) Live
 2) Static
@@ -201,16 +216,20 @@ Select crawl type:
 ```
 
 **For preprod and LIVE:**
+
 - Choose `1` (Live)
 
 **For STATIC (last crawl only):**
+
 - Choose `2` (Static)
 - Make sure /etc/hosts is configured first!
 
 ### Step 4: Wait for Crawl
+
 SF will crawl the site (takes several minutes depending on size).
 
 ### Step 5: Export Completes
+
 Report automatically generated and sent to GChat.
 
 ## Common Tasks
@@ -245,6 +264,7 @@ Report automatically generated and sent to GChat.
 ### Issue: QA Server Connection Failed
 
 **Solution:**
+
 - Check QA_URL in `.env`
 - Verify credentials (QA_USER, QA_PASS)
 - Contact team if server is down
@@ -252,12 +272,14 @@ Report automatically generated and sent to GChat.
 ### Issue: Screaming Frog Not Found
 
 **Solution:**
+
 - Install Screaming Frog to `/Applications/`
 - Check path: `/Applications/Screaming Frog SEO Spider.app/`
 
 ### Issue: GChat Notifications Not Arriving
 
 **Solution:**
+
 - Check `GCHAT_WEBHOOK_TEST` in `.env`
 - Verify webhook URL with team
 - Test with curl:
@@ -270,6 +292,7 @@ Report automatically generated and sent to GChat.
 ### Issue: Permission Denied
 
 **Solution:**
+
 ```bash
 chmod +x src/workflows/*.sh
 chmod +x src/sf/*.sh
@@ -278,10 +301,12 @@ chmod +x src/sf/*.sh
 ## Getting Help
 
 **Documentation:**
+
 - Main workflow: `src/workflows/README.md`
 - SF extract: `src/sf/` documentation
 
 **Ask your team:**
+
 - QA server credentials
 - GChat webhook URLs
 - Buddy deployment access
@@ -329,5 +354,3 @@ All commands run from workflows directory (`cd automation/src/workflows`):
 5. ✅ Ask team lead about production access
 
 ---
-
-**Simple. Clean. Ready to use.**
