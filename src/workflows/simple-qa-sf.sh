@@ -443,6 +443,25 @@ if [[ "$SKIP_SF" == "false" ]]; then
     echo "Starting Screaming Frog crawl..."
     echo "   sf-extract.sh will prompt you for all options"
     echo ""
+
+    # Send start notification to GChat
+    echo "Sending SF crawl start notification to GChat..."
+
+    SF_START_MESSAGE="Screaming Frog Crawl Started (Preprod)
+
+Environment: $ENV
+Time: $(date '+%Y-%m-%d %H:%M:%S')
+
+Running preprod crawl..."
+
+    sf_start_payload=$(jq -n --arg text "$SF_START_MESSAGE" '{text: $text}')
+    curl -s -X POST \
+      -H "Content-Type: application/json; charset=UTF-8" \
+      -d "$sf_start_payload" \
+      "${GCHAT_WEBHOOK_TEST}" > /dev/null 2>&1
+
+    echo "   Notification sent"
+    echo ""
     echo "=========================================="
     echo ""
 
@@ -460,15 +479,43 @@ if [[ "$SKIP_SF" == "false" ]]; then
       echo ""
       echo "=========================================="
       echo ""
-      echo "✅ Screaming Frog crawl complete"
+      echo "Screaming Frog crawl complete"
       if [[ -n "$SF_OUTDIR" ]]; then
         echo "   Output: $SF_OUTDIR"
       fi
       echo ""
+
+      # Send completion notification to GChat
+      SF_COMPLETE_MESSAGE="Screaming Frog Crawl Complete (Preprod)
+
+Environment: $ENV
+Time: $(date '+%Y-%m-%d %H:%M:%S')
+
+Preprod crawl finished successfully!"
+
+      sf_complete_payload=$(jq -n --arg text "$SF_COMPLETE_MESSAGE" '{text: $text}')
+      curl -s -X POST \
+        -H "Content-Type: application/json; charset=UTF-8" \
+        -d "$sf_complete_payload" \
+        "${GCHAT_WEBHOOK_TEST}" > /dev/null 2>&1
     else
       echo ""
-      echo "❌ Screaming Frog crawl failed or was cancelled"
+      echo "Screaming Frog crawl failed or was cancelled"
       echo ""
+
+      # Send failure notification to GChat
+      SF_FAIL_MESSAGE="Screaming Frog Crawl Failed (Preprod)
+
+Environment: $ENV
+Time: $(date '+%Y-%m-%d %H:%M:%S')
+
+Preprod crawl failed or was cancelled."
+
+      sf_fail_payload=$(jq -n --arg text "$SF_FAIL_MESSAGE" '{text: $text}')
+      curl -s -X POST \
+        -H "Content-Type: application/json; charset=UTF-8" \
+        -d "$sf_fail_payload" \
+        "${GCHAT_WEBHOOK_TEST}" > /dev/null 2>&1
     fi
   else
     echo "▶️  [TEST MODE] Would run sf-extract.sh"
