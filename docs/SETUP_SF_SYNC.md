@@ -4,9 +4,19 @@
 
 ### Quick Setup (5 minutes)
 
+**Note:** SF sync is **OPTIONAL** but **REQUIRES SSH key access** to Nexcess.
+- **With SSH access:** Automatic baseline sync across team
+- **Without SSH access:** Workflow skips sync, uses local exports only
+
 1. **Update your `.env` file:**
 
-Add these two lines to your local `.env` file:
+If you don't have a `.env` file yet:
+```bash
+cp .env.example .env
+# Then edit .env and fill in your credentials
+```
+
+Add these two lines to your `.env` file (uncomment if using .env.example):
 
 ```bash
 # SF Exports Nexcess Sync Configuration
@@ -14,15 +24,37 @@ NEXCESS_SF_HOST="a5c5b759_1@f5f43580ac.nxcli.io"
 NEXCESS_SF_PATH="/home/a5c5b759/sf-exports"
 ```
 
-2. **Verify SSH access:**
+2. **Setup SSH key access (REQUIRED for sync):**
 
-Test that you can connect to the Nexcess stage server:
+The sync uses rsync over SSH, which requires passwordless SSH key authentication.
 
+Test your SSH access:
 ```bash
 ssh a5c5b759_1@f5f43580ac.nxcli.io "echo Connected successfully"
 ```
 
-If this fails, you'll need SSH key access to the Nexcess stage server.
+**If this fails, you need to:**
+
+a) Generate SSH key (if you don't have one):
+```bash
+ssh-keygen -t ed25519 -C "your_email@example.com"
+```
+
+b) Share your **public key** with team lead to add to Nexcess server:
+```bash
+cat ~/.ssh/id_ed25519.pub
+# Or: cat ~/.ssh/id_rsa.pub
+```
+
+c) Once your key is added, test again:
+```bash
+ssh a5c5b759_1@f5f43580ac.nxcli.io "echo Connected successfully"
+```
+
+**Until SSH is configured:**
+- QA workflow skips sync automatically
+- Use `--skip-sync` flag to suppress the warning message
+- You can still run QA - it just uses local exports only
 
 3. **Test the sync:**
 
@@ -41,6 +73,7 @@ Run a test sync to verify everything works:
 Now when you run QA workflows, it will automatically:
 - Pull latest sf-exports before starting (get team's baseline)
 - Push your new exports after completion (share with team)
+- **Or skip gracefully if SSH isn't configured**
 
 ## Why This Matters
 
