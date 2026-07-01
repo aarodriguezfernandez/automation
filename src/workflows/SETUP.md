@@ -20,19 +20,19 @@ Simple setup guide for new developers.
 
 ```bash
 git clone <repository-url>
-cd automation
+cd automation/src/workflows
 ```
 
 ### 2. Configure Environment
 
-Copy and edit `.env`:
+Copy and edit `.env` (in automation root):
 
 ```bash
-# Create .env if it doesn't exist
-cp .env.example .env  # Or create from scratch
+# Create .env in automation root if it doesn't exist
+cp ../../.env.example ../../.env  # Or create from scratch
 
 # Edit .env
-nano .env
+nano ../../.env
 ```
 
 **Required configuration:**
@@ -57,17 +57,15 @@ GCHAT_WEBHOOK="your-production-webhook-url"
 ### 3. Make Scripts Executable
 
 ```bash
-chmod +x src/workflows/simple-qa-sf.sh
-chmod +x src/workflows/watch-qa-completion.sh
-chmod +x src/sf/sf-extract.sh
+chmod +x simple-qa-sf.sh
+chmod +x watch-qa-completion.sh
+chmod +x ../sf/sf-extract.sh
 ```
 
 ### 4. Test Installation
 
 ```bash
-cd src/workflows
-
-# Test mode (dry run - safe to run)
+# From workflows directory (src/workflows)
 ./simple-qa-sf.sh --env preprod-avg --test
 ```
 
@@ -80,9 +78,7 @@ You should see:
 ### Basic Workflow
 
 ```bash
-cd automation/src/workflows
-
-# Full workflow (without local QA)
+# From workflows directory (src/workflows)
 ./simple-qa-sf.sh --env preprod-avg
 ```
 
@@ -93,27 +89,46 @@ cd automation/src/workflows
 4. LIVE production SF crawl
 5. STATIC production SF crawl
 
-### Important Flags
+### Understanding the Flags
 
-```bash
-# Test mode (dry run)
-./simple-qa-sf.sh --env preprod-avg --test
+**`--env` flag: For QA tests ONLY**
 
-# Skip QA tests (SF only)
-./simple-qa-sf.sh --env preprod-avg --skip-qa
+This tells the QA server which environment to test:
 
-# Skip SF crawl (QA only)
-./simple-qa-sf.sh --env preprod-avg --skip-sf
+- `preprod-avg` → QA tests run against Preprod Avigilon config
+- `stage-avg` → QA tests run against Stage Avigilon config
+- `prod-avg` → QA tests run against Production Avigilon config
+- `preprod-pel` → QA tests run against Preprod Pelco config
+- `stage-pel` → QA tests run against Stage Pelco config
+- `prod-pel` → QA tests run against Production Pelco config
+
+**Important:** This does NOT set the Screaming Frog URL!
+
+**Screaming Frog URLs: Interactive prompts**
+
+When SF runs (3 times: preprod, LIVE, STATIC), you'll be prompted:
+
+```
+Enter URL: _
 ```
 
-### Available Environments
+**You type the URL manually each time:**
+- Preprod SF: `https://preprod.avigilon.com` or `https://preprod.pelco.com`
+- LIVE SF: `https://www.avigilon.com` or `https://www.pelco.com`
+- STATIC SF: `https://www.avigilon.com` or `https://www.pelco.com` (via /etc/hosts)
 
-- `preprod-avg` - Preprod Avigilon
-- `preprod-pel` - Preprod Pelco
-- `stage-avg` - Stage Avigilon
-- `stage-pel` - Stage Pelco
-- `prod-avg` - Production Avigilon
-- `prod-pel` - Production Pelco
+### Command Flags
+
+```bash
+# Test mode (dry run - no actual execution)
+./simple-qa-sf.sh --env preprod-avg --test
+
+# Skip QA tests (SF crawls only - you'll still enter URLs)
+./simple-qa-sf.sh --env preprod-avg --skip-qa
+
+# Skip SF crawls (QA tests only)
+./simple-qa-sf.sh --env preprod-avg --skip-sf
+```
 
 ## Local QA Tool (Optional)
 
@@ -141,10 +156,16 @@ All notifications go to the configured webhook in `.env`.
 - Switch to `GCHAT_WEBHOOK`
 - Edit line in `.env` or ask team lead
 
-## Screaming Frog Interactive Mode
+## Screaming Frog: Step-by-Step
 
-When SF runs, you'll see prompts:
+**SF runs 3 times during full workflow:**
+1. Preprod crawl (before deployment)
+2. LIVE production crawl (after deployment)
+3. STATIC production crawl (after deployment)
 
+**Each time you'll see these prompts:**
+
+### Step 1: Choose Mode
 ```
 1) Use existing crawl
 2) Run new crawl
@@ -152,21 +173,52 @@ When SF runs, you'll see prompts:
 Select option:
 ```
 
-**For new crawl:**
-- Choose option 2
-- Enter URL (e.g., https://preprod.avigilon.com)
-- Choose crawl type (Live/Static)
+**For new crawl (typical):**
+- Choose `2`
+- Continue to Step 2
 
-**For existing crawl:**
-- Choose option 1
-- Select from list
+**For existing crawl (reuse previous):**
+- Choose `1`
+- Select from list (no URL needed)
+- Skip to Step 3
+
+### Step 2: Enter URL
+```
+Enter URL: _
+```
+
+**Type the full URL:**
+- Preprod: `https://preprod.avigilon.com` or `https://preprod.pelco.com`
+- LIVE: `https://www.avigilon.com` or `https://www.pelco.com`
+- STATIC: `https://www.avigilon.com` or `https://www.pelco.com` (same as LIVE)
+
+### Step 3: Choose Crawl Type
+```
+1) Live
+2) Static
+
+Select crawl type:
+```
+
+**For preprod and LIVE:**
+- Choose `1` (Live)
+
+**For STATIC (last crawl only):**
+- Choose `2` (Static)
+- Make sure /etc/hosts is configured first!
+
+### Step 4: Wait for Crawl
+SF will crawl the site (takes several minutes depending on size).
+
+### Step 5: Export Completes
+Report automatically generated and sent to GChat.
 
 ## Common Tasks
 
 ### Weekly QA Run
 
 ```bash
-cd automation/src/workflows
+# From workflows directory (src/workflows)
 
 # 1. Run preprod check
 ./simple-qa-sf.sh --env preprod-avg
@@ -251,6 +303,8 @@ automation/
 ```
 
 ## Quick Reference
+
+All commands run from workflows directory (`cd automation/src/workflows`):
 
 ```bash
 # Test installation
